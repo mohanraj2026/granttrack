@@ -9,8 +9,8 @@ import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2026-07-30T11:27:25+0530",
-    comments = "version: 1.6.3, compiler: javac, environment: Java 21.0.2 (Oracle Corporation)"
+    date = "2026-07-30T16:11:06+0530",
+    comments = "version: 1.6.3, compiler: Eclipse JDT (IDE) 3.46.100.v20260624-0231, environment: Java 21.0.11 (Eclipse Adoptium)"
 )
 @Component
 public class DisbursementMapperImpl implements DisbursementMapper {
@@ -23,18 +23,18 @@ public class DisbursementMapperImpl implements DisbursementMapper {
 
         MilestoneResponse.MilestoneResponseBuilder milestoneResponse = MilestoneResponse.builder();
 
-        milestoneResponse.id( milestone.getId() );
+        milestoneResponse.amount( milestone.getAmount() );
         milestoneResponse.awardId( milestone.getAwardId() );
-        milestoneResponse.milestoneNumber( milestone.getMilestoneNumber() );
+        milestoneResponse.createdAt( milestone.getCreatedAt() );
         milestoneResponse.description( milestone.getDescription() );
         milestoneResponse.dueDate( milestone.getDueDate() );
-        milestoneResponse.amount( milestone.getAmount() );
-        milestoneResponse.evidenceRequired( milestone.getEvidenceRequired() );
-        milestoneResponse.evidenceNote( milestone.getEvidenceNote() );
         milestoneResponse.evidenceDocName( milestone.getEvidenceDocName() );
-        milestoneResponse.evidenceSubmittedDate( milestone.getEvidenceSubmittedDate() );
+        milestoneResponse.evidenceNote( milestone.getEvidenceNote() );
+        milestoneResponse.evidenceRequired( milestone.getEvidenceRequired() );
         milestoneResponse.evidenceReviewComment( milestone.getEvidenceReviewComment() );
-        milestoneResponse.createdAt( milestone.getCreatedAt() );
+        milestoneResponse.evidenceSubmittedDate( milestone.getEvidenceSubmittedDate() );
+        milestoneResponse.id( milestone.getId() );
+        milestoneResponse.milestoneNumber( milestone.getMilestoneNumber() );
         milestoneResponse.updatedAt( milestone.getUpdatedAt() );
 
         milestoneResponse.status( milestone.getStatus().name() );
@@ -53,13 +53,13 @@ public class DisbursementMapperImpl implements DisbursementMapper {
 
         fundDisbursementResponse.milestoneId( disbursementMilestoneId( disbursement ) );
         fundDisbursementResponse.milestoneDescription( disbursementMilestoneDescription( disbursement ) );
-        fundDisbursementResponse.id( disbursement.getId() );
-        fundDisbursementResponse.awardId( disbursement.getAwardId() );
         fundDisbursementResponse.amount( disbursement.getAmount() );
-        fundDisbursementResponse.disbursedDate( disbursement.getDisbursedDate() );
-        fundDisbursementResponse.receivingAccountRef( disbursement.getReceivingAccountRef() );
-        fundDisbursementResponse.paymentReference( disbursement.getPaymentReference() );
+        fundDisbursementResponse.awardId( disbursement.getAwardId() );
         fundDisbursementResponse.createdAt( disbursement.getCreatedAt() );
+        fundDisbursementResponse.disbursedDate( disbursement.getDisbursedDate() );
+        fundDisbursementResponse.id( disbursement.getId() );
+        fundDisbursementResponse.paymentReference( disbursement.getPaymentReference() );
+        fundDisbursementResponse.receivingAccountRef( disbursement.getReceivingAccountRef() );
         fundDisbursementResponse.updatedAt( disbursement.getUpdatedAt() );
 
         fundDisbursementResponse.status( disbursement.getStatus().name() );

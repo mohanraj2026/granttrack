@@ -241,7 +241,7 @@
   </div>
 </gt-modal>
 
-<!-- Researcher: submit milestone evidence (note + document) -->
+<!-- Researcher: submit milestone evidence-->
 <gt-modal [open]="evidenceModalOpen()" title="Submit Milestone Evidence" [width]="560" (closed)="evidenceModalOpen.set(false)">
   <form [formGroup]="evidenceForm" id="evidenceForm" (ngSubmit)="confirmSubmitEvidence()">
     <p class="text-secondary small mb-3">
