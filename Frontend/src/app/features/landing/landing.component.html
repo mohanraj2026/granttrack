@@ -1,0 +1,177 @@
+<div class="landing">
+  <!-- Top navigation -->
+  <header class="lp-nav">
+    <div class="container d-flex align-items-center justify-content-between">
+      <a class="brand" routerLink="/">
+        <gt-icon name="diamond" [size]="24" /> <span>GrantTrack</span>
+      </a>
+      <nav class="lp-links">
+        <a href="#features">Features</a>
+        <a href="#roles">Roles</a>
+        <a href="#lifecycle">Lifecycle</a>
+      </nav>
+      <div class="lp-cta">
+        @if (isAuthed()) {
+          <a routerLink="/dashboard" class="btn btn-primary">Open Dashboard <gt-icon name="chevron-right" [size]="16" /></a>
+        } @else {
+          <a routerLink="/login" class="btn btn-ghost lp-ghost">Sign in</a>
+          <a routerLink="/register" class="btn btn-primary">Get started</a>
+        }
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-glow"></div>
+    <div class="container">
+      <div class="row align-items-center g-5">
+        <div class="col-lg-7 hero-copy">
+          <span class="pill"><gt-icon name="sparkles" [size]="14" /> Research Grant &amp; Academic Output Platform</span>
+          <h1>Run the entire research-grant lifecycle in one place.</h1>
+          <p>From funding calls to published results — GrantTrack unifies applications, blind peer review,
+             awards, milestone-based disbursement, progress tracking and research outputs, with role-based
+             access and a full audit trail.</p>
+          <div class="hero-actions">
+            @if (isAuthed()) {
+              <a routerLink="/dashboard" class="btn btn-primary btn-lg">Open Dashboard <gt-icon name="chevron-right" [size]="18" /></a>
+            } @else {
+              <a routerLink="/register" class="btn btn-primary btn-lg">Create an account</a>
+              <a routerLink="/login" class="btn btn-secondary btn-lg">Sign in</a>
+            }
+          </div>
+          <div class="hero-note"><gt-icon name="lock" [size]="14" /> Access is secured — sign in to reach any workspace.</div>
+        </div>
+        <div class="col-lg-5">
+          <div class="hero-card" gtReveal>
+            <div class="hc-head"><gt-icon name="diamond" [size]="18" /> Grant pipeline</div>
+            <div class="hc-flow">
+              @for (s of lifecycle; track s.label; let last = $last) {
+                <div class="hc-step">
+                  <span class="hc-ic"><gt-icon [name]="s.icon" [size]="16" /></span>
+                  <span>{{ s.label }}</span>
+                </div>
+                @if (!last) {<span class="hc-arrow"><gt-icon name="chevron-right" [size]="14" /></span>}
+              }
+            </div>
+            <div class="hc-grid">
+              @for (st of stats; track st.label) {
+                <div class="hc-stat">
+                  <div class="v">{{ st.value }}</div>
+                  <div class="l">{{ st.label }}</div>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section id="features" class="section">
+    <div class="container">
+      <div class="section-head" gtReveal>
+        <span class="eyebrow">Capabilities</span>
+        <h2>Everything a funding body needs</h2>
+        <p>Nine integrated modules covering the complete grant journey.</p>
+      </div>
+      <div class="row g-4">
+        @for (f of features; track f.title; let i = $index) {
+          <div class="col-md-6 col-lg-3">
+            <div class="feature-card" gtReveal [revealDelay]="(i % 4) * 80">
+              <div class="f-ic"><gt-icon [name]="f.icon" [size]="22" /></div>
+              <h3>{{ f.title }}</h3>
+              <p>{{ f.text }}</p>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- Lifecycle band -->
+  <section id="lifecycle" class="section section-tint">
+    <div class="container">
+      <div class="section-head" gtReveal>
+        <span class="eyebrow">How it works</span>
+        <h2>One clear path, start to finish</h2>
+      </div>
+      <div class="flow" gtReveal>
+        @for (s of lifecycle; track s.label; let last = $last) {
+          <div class="flow-step">
+            <span class="flow-ic"><gt-icon [name]="s.icon" [size]="20" /></span>
+            <span class="flow-lbl">{{ s.label }}</span>
+          </div>
+          @if (!last) {<span class="flow-arrow"><gt-icon name="chevron-right" [size]="18" /></span>}
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- Roles -->
+  <section id="roles" class="section">
+    <div class="container">
+      <div class="section-head" gtReveal>
+        <span class="eyebrow">Built for every actor</span>
+        <h2>Six role-based workspaces</h2>
+        <p>Separation of duties keeps funding fair, accountable and auditable.</p>
+      </div>
+      <div class="row g-4">
+        @for (r of roles; track r.name; let i = $index) {
+          <div class="col-md-6 col-lg-4">
+            <div class="role-card" gtReveal [revealDelay]="(i % 3) * 80">
+              <span class="r-ic"><gt-icon [name]="r.icon" [size]="20" /></span>
+              <div>
+                <h3>{{ r.name }}</h3>
+                <p>{{ r.text }}</p>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA band -->
+  <section class="cta-band">
+    <div class="container" gtReveal>
+      <h2>Ready to manage research funding the modern way?</h2>
+      <p>Sign in to your workspace or create an account to get started.</p>
+      <div class="hero-actions justify-content-center">
+        @if (isAuthed()) {
+          <a routerLink="/dashboard" class="btn btn-lg cta-btn">Open Dashboard</a>
+        } @else {
+          <a routerLink="/register" class="btn btn-lg cta-btn">Create an account</a>
+          <a routerLink="/login" class="btn btn-lg btn-ghost cta-ghost">Sign in</a>
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="lp-foot">
+    <div class="container">
+      <div class="foot-main">
+        <div class="foot-brand">
+          <span class="brand"><gt-icon name="diamond" [size]="20" /> GrantTrack</span>
+          <p>Research Grant &amp; Academic Output Management System — one secure platform for the
+             complete funding lifecycle.</p>
+        </div>
+        <nav class="foot-links">
+          <a href="#features">Features</a>
+          <a href="#roles">Roles</a>
+          <a href="#lifecycle">Lifecycle</a>
+          <a routerLink="/login">Sign in</a>
+          <a routerLink="/register">Register</a>
+        </nav>
+      </div>
+      <div class="foot-bottom">
+        <span class="text-sm">© 2026 GrantTrack · v1.0</span>
+        <a routerLink="/staff-login" class="admin-login">
+          <gt-icon name="shield-check" [size]="15" /> Staff &amp; Admin Login
+        </a>
+      </div>
+    </div>
+  </footer>
+</div>

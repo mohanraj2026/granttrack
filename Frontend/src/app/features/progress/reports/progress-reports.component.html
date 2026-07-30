@@ -1,0 +1,170 @@
+<gt-progress-tabs />
+
+<gt-page-header title="Progress Reports" subtitle="Submit and review periodic award progress.">
+  <button *gtHasRole="[Role.RESEARCHER]" class="btn btn-primary d-inline-flex align-items-center gap-2" (click)="openCreate()">
+    <gt-icon name="plus" [size]="16" /> New report
+  </button>
+</gt-page-header>
+
+<div class="card border-0 shadow-sm rounded-4 mb-4">
+  <div class="card-header bg-white border-0 pt-3 pb-0 px-4">
+    <gt-search-filter-bar
+      searchPlaceholder="Search reports…"
+      [filters]="statusFilter"
+      (change)="onFilter($event)">
+      <div style="width:260px">
+        <gt-searchable-select
+          [ngModel]="awardFilter()"
+          (ngModelChange)="onAwardFilter($event)"
+          [options]="awardOptions()"
+          placeholder="All awards"
+          searchPlaceholder="Search awards…">
+        </gt-searchable-select>
+      </div>
+    </gt-search-filter-bar>
+  </div>
+
+  <div class="card-body p-0">
+
+    <gt-data-table
+      [columns]="columns"
+      [rows]="rows()"
+      [loading]="loading()"
+      [sortField]="(query().sort || '').split(',')[0]"
+      [sortDir]="$any((query().sort || '').split(',')[1] || 'asc')"
+      (sortChange)="onSort($event)"
+      [rowActions]="actions"
+      emptyTitle="No progress reports"
+      emptySubtitle="Create your first progress report to begin reporting.">
+      <ng-template #actions let-row>
+        <gt-dropdown-menu>
+          @if (row.status === 'DRAFT' || row.status === 'REVISION_REQUESTED') {
+            <button *gtHasRole="[Role.RESEARCHER]" class="dropdown-item py-2" (click)="openEdit(row)">
+              <gt-icon name="edit" [size]="16" class="me-2 text-secondary" /> Edit
+            </button>
+            <button *gtHasRole="[Role.RESEARCHER]" class="dropdown-item py-2" (click)="submit(row)">
+              <gt-icon name="send" [size]="16" class="me-2 text-primary" /> {{ row.status === 'REVISION_REQUESTED' ? 'Resubmit' : 'Submit' }}
+            </button>
+          }
+          @if (row.hasReportDocument) {
+            <button class="dropdown-item py-2" (click)="downloadReport(row)">
+              <gt-icon name="file-text" [size]="16" class="me-2 text-primary" /> Download document
+            </button>
+          }
+          @if (row.status === 'SUBMITTED') {
+            <button *gtHasRole="[Role.COMPLIANCE_OFFICER]" class="dropdown-item py-2" (click)="openReview(row)">
+              <gt-icon name="check-circle" [size]="16" class="me-2 text-success" /> Review
+            </button>
+          }
+        </gt-dropdown-menu>
+      </ng-template>
+    </gt-data-table>
+  </div>
+
+  <div class="card-footer bg-white border-top px-4 py-3">
+    <gt-paginator
+      [page]="query().page || 0" [size]="query().size || 20"
+      [totalElements]="total()" [totalPages]="totalPages()"
+      (pageChange)="onPage($event)" (sizeChange)="onSize($event)" />
+  </div>
+</div>
+
+<gt-modal [open]="modalOpen()" [title]="modalTitle()" [width]="640" (closed)="modalOpen.set(false)">
+  <form [formGroup]="form" id="reportForm" (ngSubmit)="save()">
+    @if (editingReviewComment()) {
+      <div class="alert alert-warning d-flex gap-2 border-0 small">
+        <gt-icon name="alert-triangle" [size]="16" class="flex-shrink-0 mt-1" />
+        <div><strong>Revision requested:</strong> {{ editingReviewComment() }}</div>
+      </div>
+    }
+    <div class="row g-3">
+      <div class="col-md-8">
+        <label class="form-label">Award <span class="text-danger">*</span></label>
+        <gt-searchable-select
+          formControlName="awardId"
+          [options]="awardOptions()"
+          placeholder="Select award…"
+          searchPlaceholder="Search by Award #…"
+          [invalid]="invalid('awardId')">
+        </gt-searchable-select>
+        @if (invalid('awardId')) { <div class="d-flex align-items-center gap-1 text-danger small mt-1"><gt-icon name="alert-triangle" [size]="13" /> Award is required.</div> }
+      </div>
+      <div class="col-md-4">
+        <label class="form-label" for="period">Period</label>
+        <div class="input-group gt-input">
+          <span class="input-group-text"><gt-icon name="calendar" [size]="16" /></span>
+          <input class="form-control py-2" formControlName="period" id="period" placeholder="e.g. 2027-Q1" />
+        </div>
+      </div>
+      <div class="col-12">
+        <label class="form-label" for="budgetUtilisationPercent">Budget utilisation (%)</label>
+        <div class="input-group gt-input" [class.is-invalid]="invalid('budgetUtilisationPercent')">
+          <span class="input-group-text"><gt-icon name="trending-up" [size]="16" /></span>
+          <input type="number" class="form-control py-2" formControlName="budgetUtilisationPercent" id="budgetUtilisationPercent" [class.is-invalid]="invalid('budgetUtilisationPercent')" placeholder="0–100" min="0" max="100" />
+        </div>
+        @if (invalid('budgetUtilisationPercent')) { <div class="d-flex align-items-center gap-1 text-danger small mt-1"><gt-icon name="alert-triangle" [size]="13" /> Must be between 0 and 100.</div> }
+      </div>
+      <div class="col-12">
+        <label class="form-label" for="summary">Summary</label>
+        <textarea class="form-control" formControlName="summary" id="summary" rows="2" placeholder="Overall progress this period…" style="border-radius:10px;"></textarea>
+      </div>
+      <div class="col-12">
+        <label class="form-label" for="keyAchievements">Key achievements</label>
+        <textarea class="form-control" formControlName="keyAchievements" id="keyAchievements" rows="2" placeholder="Milestones reached, results obtained…" style="border-radius:10px;"></textarea>
+      </div>
+      <div class="col-12">
+        <label class="form-label" for="challenges">Challenges</label>
+        <textarea class="form-control" formControlName="challenges" id="challenges" rows="2" placeholder="e.g. Equipment delivery delayed by 3 weeks; mitigated by re-sequencing tasks" style="border-radius:10px;"></textarea>
+      </div>
+      <div class="col-12">
+        <label class="form-label" for="reportFile">Report document</label>
+        <input type="file" class="form-control" id="reportFile" accept=".pdf,.doc,.docx" (change)="onReportFile($event)" />
+        <div class="form-text">Attach the full progress report (PDF or Word, up to 10 MB). Optional but recommended.</div>
+      </div>
+    </div>
+  </form>
+
+  <div footer class="d-flex justify-content-end gap-2">
+    <button class="btn btn-light" (click)="modalOpen.set(false)">Cancel</button>
+    <button class="btn btn-primary px-4 d-inline-flex align-items-center gap-2" form="reportForm" type="submit" [disabled]="saving()">
+      @if (saving()) { <span class="spinner-border spinner-border-sm"></span> Saving… } @else { <gt-icon name="check" [size]="16" /> Save report }
+    </button>
+  </div>
+</gt-modal>
+
+<!-- Compliance: review a submitted report (view document + approve / request revision) -->
+<gt-modal [open]="reviewModalOpen()" title="Review Progress Report" [width]="560" (closed)="reviewModalOpen.set(false)">
+  <div>
+    <p class="text-secondary small mb-3">
+      Award #{{ reviewTarget()?.awardId }} · Period {{ reviewTarget()?.period || '—' }} ·
+      Budget utilisation {{ reviewTarget()?.budgetUtilisationPercent ?? '—' }}%
+    </p>
+    @if (reviewTarget()?.summary) {
+      <div class="mb-3">
+        <div class="small text-secondary fw-semibold mb-1">Summary</div>
+        <div class="border rounded-3 p-3 bg-body-tertiary small">{{ reviewTarget()?.summary }}</div>
+      </div>
+    }
+    <div class="mb-3">
+      @if (reviewTarget()?.hasReportDocument) {
+        <button type="button" class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-2" (click)="downloadReport(reviewTarget()!)">
+          <gt-icon name="file-text" [size]="14" /> Download report ({{ reviewTarget()?.reportDocName }})
+        </button>
+      } @else {
+        <span class="text-secondary small">No report document was attached.</span>
+      }
+    </div>
+    <form [formGroup]="reviewForm">
+      <label class="form-label" for="rpComment">Comment <span class="text-muted fw-normal">(required to request revision)</span></label>
+      <textarea class="form-control" formControlName="comment" id="rpComment" rows="2"
+                placeholder="Optional on approval; explain what to revise if returning." style="border-radius:10px;"></textarea>
+    </form>
+  </div>
+  <div footer class="d-flex justify-content-between gap-2">
+    <button class="btn btn-outline-warning d-inline-flex align-items-center gap-2" (click)="review(reviewTarget()!, 'REQUEST_REVISION')"><gt-icon name="alert-triangle" [size]="16" /> Request revision</button>
+    <div class="d-flex gap-2">
+      <button class="btn btn-light" (click)="reviewModalOpen.set(false)">Cancel</button>
+      <button class="btn btn-success px-4 d-inline-flex align-items-center gap-2" (click)="review(reviewTarget()!, 'APPROVE')"><gt-icon name="check" [size]="16" /> Approve</button>
+    </div>
+  </div>
+</gt-modal>

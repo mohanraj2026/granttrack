@@ -1,0 +1,108 @@
+<div class="app-shell" [class.collapsed]="collapsed()">
+  @if (mobileOpen()) { <div class="app-scrim" (click)="mobileOpen.set(false)"></div> }
+
+  <!-- ============ Sidebar ============ -->
+  <aside class="app-sidebar" [class.mobile-open]="mobileOpen()">
+    <div class="d-flex align-items-center gap-2 px-3 flex-shrink-0 border-bottom border-light border-opacity-10" style="height:var(--gt-topbar-h);">
+      <span class="app-logo"><gt-icon name="diamond" [size]="20" /></span>
+      <span class="brand-name fw-bold text-white fs-6">GrantTrack</span>
+    </div>
+
+    <nav class="flex-grow-1 overflow-auto p-2">
+      <div class="nav-section-label text-uppercase text-secondary px-2 mt-2 mb-1" style="font-size:.66rem; letter-spacing:.08em;">Workspace</div>
+      @for (item of visibleNav(); track item.path) {
+        <a [routerLink]="item.path" routerLinkActive="active" class="app-nav-item" [title]="item.label">
+          <gt-icon [name]="item.icon" [size]="19" />
+          <span class="nav-label">{{ item.label }}</span>
+        </a>
+      }
+    </nav>
+
+    <div class="side-foot px-3 py-3 flex-shrink-0 border-top border-light border-opacity-10">
+      <span class="nav-label text-secondary" style="font-size:.72rem;">v1.0 · Research Platform</span>
+    </div>
+  </aside>
+
+  <!-- ============ Main column ============ -->
+  <div class="d-flex flex-column flex-grow-1" style="min-width:0;">
+    <!-- Topbar -->
+    <header class="app-topbar d-flex align-items-center gap-2 px-3 px-lg-4">
+      <button class="btn btn-ghost p-2 d-lg-none" (click)="mobileOpen.set(!mobileOpen())" aria-label="Open menu">
+        <gt-icon name="menu" [size]="20" />
+      </button>
+      <button class="btn btn-ghost p-2 d-none d-lg-inline-flex" (click)="collapsed.set(!collapsed())" aria-label="Collapse sidebar">
+        <gt-icon name="menu" [size]="20" />
+      </button>
+
+      <!-- Breadcrumb -->
+      <nav aria-label="breadcrumb" class="d-none d-md-block ms-1">
+        <ol class="breadcrumb mb-0" style="--bs-breadcrumb-divider-color:var(--gt-text-faint);">
+          <li class="breadcrumb-item"><a routerLink="/dashboard" class="text-decoration-none text-secondary">Home</a></li>
+          @for (crumb of breadcrumbs(); track crumb.url; let last = $last) {
+            @if (last) {
+              <li class="breadcrumb-item active fw-semibold text-dark" aria-current="page">{{ crumb.label }}</li>
+            } @else {
+              <li class="breadcrumb-item"><a [routerLink]="crumb.url" class="text-decoration-none text-secondary">{{ crumb.label }}</a></li>
+            }
+          }
+        </ol>
+      </nav>
+
+      <div class="ms-auto d-flex align-items-center gap-1">
+        <a routerLink="/notifications" class="btn btn-ghost p-2 position-relative" title="Notifications"
+           [attr.aria-label]="unread() > 0 ? unread() + ' unread notifications' : 'Notifications'">
+          <gt-icon name="bell" [size]="19" />
+          @if (unread() > 0) {
+            <span class="position-absolute badge rounded-pill bg-danger border border-2 border-white"
+                  style="top:2px; right:2px; font-size:.6rem; min-width:1.05rem; padding:.15rem .3rem; line-height:1;">
+              {{ unread() > 99 ? '99+' : unread() }}
+            </span>
+          }
+        </a>
+
+        <div class="app-user position-relative">
+          <button class="btn btn-ghost d-flex align-items-center gap-2 py-1 ps-1 pe-2" (click)="menuOpen.set(!menuOpen())" aria-label="Account menu">
+            <span class="app-avatar">{{ initials() }}</span>
+            <span class="d-none d-md-block text-start lh-1">
+              <span class="d-block fw-semibold text-dark" style="font-size:.83rem;">{{ user()?.name }}</span>
+              <span class="d-block text-secondary" style="font-size:.72rem;">{{ primaryRole() }}</span>
+            </span>
+            <gt-icon name="chevron-down" [size]="16" class="text-secondary d-none d-md-inline" />
+          </button>
+
+          @if (menuOpen()) {
+            <div class="app-usermenu" (click)="$event.stopPropagation()">
+              <div class="px-3 py-2 border-bottom mb-1">
+                <div class="fw-semibold text-dark small text-truncate">{{ user()?.name }}</div>
+                <div class="text-secondary text-truncate" style="font-size:.75rem;">{{ user()?.email }}</div>
+              </div>
+              <a routerLink="/profile" (click)="menuOpen.set(false)" class="app-usermenu-item"><gt-icon name="user" [size]="16" /> My profile</a>
+              <a routerLink="/notifications" (click)="menuOpen.set(false)" class="app-usermenu-item"><gt-icon name="bell" [size]="16" /> Notifications</a>
+              <div class="border-top my-1"></div>
+              <button (click)="logout()" class="app-usermenu-item text-danger"><gt-icon name="log-out" [size]="16" /> Sign out</button>
+            </div>
+          }
+        </div>
+      </div>
+    </header>
+
+    <!-- Content + footer -->
+    <main class="flex-grow-1 d-flex flex-column">
+      <div class="flex-grow-1 w-100 mx-auto px-3 px-lg-4 py-3" style="max-width:var(--gt-content-max);">
+        <div [@routeFade]="currentUrl()">
+          <router-outlet />
+        </div>
+      </div>
+
+      <footer class="border-top py-3 px-3 px-lg-4 mt-2">
+        <div class="w-100 mx-auto d-flex flex-wrap justify-content-between align-items-center gap-2 text-secondary" style="max-width:var(--gt-content-max); font-size:.8rem;">
+          <span>© 2026 GrantTrack · Research Grant &amp; Academic Output Management</span>
+          <span class="d-flex gap-3">
+            <a routerLink="/notifications" class="text-decoration-none text-secondary">Notifications</a>
+            <a routerLink="/profile" class="text-decoration-none text-secondary">Profile</a>
+          </span>
+        </div>
+      </footer>
+    </main>
+  </div>
+</div>

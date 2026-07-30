@@ -1,0 +1,20 @@
+spring:
+  jpa:
+    show-sql: true
+
+# Local-development-only secrets. These are intentionally well-known and are REJECTED at startup
+# under any non-local profile (see JwtTokenProvider#validateSecret / DataInitializer#resolveAdminPassword).
+granttrack:
+  security:
+    jwt:
+      secret: Y3JhbnRUcmFja1N1cGVyU2VjcmV0S2V5Rm9ySldUU2lnbmluZzEyMzQ1Njc4OTA=
+  bootstrap:
+    admin-password: Admin@12345
+  internal:
+    token: gt-internal-dev-token
+
+logging:
+  level:
+    com.granttrack: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.springframework.security: DEBUG

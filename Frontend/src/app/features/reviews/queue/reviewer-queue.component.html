@@ -1,0 +1,78 @@
+﻿<gt-reviews-tabs />
+
+<gt-page-header title="My Review Queue" subtitle="Applications assigned to you for review." />
+
+<div class="card border-0 shadow-sm rounded-4 mb-4">
+  <div class="card-header bg-white border-0 pt-3 pb-0 px-4">
+    <gt-search-filter-bar
+      [showSearch]="false"
+      [filters]="statusFilter"
+      (change)="onFilter($event)" />
+  </div>
+
+  <div class="card-body p-0">
+
+  <gt-data-table
+    [columns]="columns"
+    [rows]="rows()"
+    [loading]="loading()"
+    [sortField]="(query().sort || '').split(',')[0]"
+    [sortDir]="$any((query().sort || '').split(',')[1] || 'asc')"
+    (sortChange)="onSort($event)"
+    [rowActions]="actions"
+    emptyTitle="No assignments"
+    emptySubtitle="You have no applications assigned for review.">
+    <ng-template #actions let-row>
+      <gt-dropdown-menu>
+        <button class="dropdown-item py-2" (click)="viewApplication(row.applicationId)">
+          <gt-icon name="eye" [size]="16" class="me-2 text-secondary" /> View Details
+        </button>
+        <a class="dropdown-item py-2" [routerLink]="['/reviews/assignments', row.id]">
+          <gt-icon name="external-link" [size]="16" class="me-2 text-primary" /> Open Review
+        </a>
+      </gt-dropdown-menu>
+    </ng-template>
+  </gt-data-table>
+  </div>
+
+  <div class="card-footer bg-white border-top px-4 py-3">
+    <gt-paginator
+      [page]="query().page || 0" [size]="query().size || 20"
+      [totalElements]="total()" [totalPages]="totalPages()"
+      (pageChange)="onPage($event)" (sizeChange)="onSize($event)" />
+  </div>
+</div>
+
+<!-- View application modal -->
+<gt-modal [open]="viewOpen()" title="Blind Application Details" [width]="640" (closed)="viewOpen.set(false)">
+  @if (viewApp(); as app) {
+    <div class="row g-3 mb-4">
+      <div class="col-sm-6">
+        <div class="text-secondary small fw-bold text-uppercase mb-1">Title</div>
+        <div class="fw-semibold text-dark">{{ app.projectTitle }}</div>
+      </div>
+      <div class="col-sm-6">
+        <div class="text-secondary small fw-bold text-uppercase mb-1">Discipline</div>
+        <div>{{ app.discipline || '—' }}</div>
+      </div>
+      <div class="col-sm-6">
+        <div class="text-secondary small fw-bold text-uppercase mb-1">Requested Amount</div>
+        <div class="fw-bold text-success">{{ app.requestedAmount | currency: 'INR' : 'symbol' : '1.0-0' }}</div>
+      </div>
+      <div class="col-sm-6">
+        <div class="text-secondary small fw-bold text-uppercase mb-1">Duration</div>
+        <div>{{ app.projectDurationMonths ? app.projectDurationMonths + ' Months' : '—' }}</div>
+      </div>
+    </div>
+
+    <div class="mb-2">
+      <div class="text-secondary small fw-bold text-uppercase mb-2">Research Abstract</div>
+      <div class="p-3 bg-body-tertiary rounded-3 border small" style="line-height: 1.5;">
+        {{ app.researchAbstract }}
+      </div>
+    </div>
+  }
+  <div footer>
+    <button class="btn btn-light px-4" (click)="viewOpen.set(false)">Close</button>
+  </div>
+</gt-modal>

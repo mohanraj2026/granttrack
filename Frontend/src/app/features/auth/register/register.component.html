@@ -1,0 +1,196 @@
+<div class="row g-0 min-vh-100">
+  <!-- ============ Brand rail ============ -->
+  <aside class="col-lg-4 auth-rail d-none d-lg-flex flex-column justify-content-between p-5 text-white">
+    <a routerLink="/" class="d-inline-flex align-items-center gap-2 text-white text-decoration-none fw-bold fs-5">
+      <span class="auth-rail-mark"><gt-icon name="diamond" [size]="22" /></span> GrantTrack
+    </a>
+
+    <div class="py-4">
+      <span class="d-inline-flex align-items-center gap-2 text-uppercase fw-semibold text-mint mb-3" style="font-size:.72rem; letter-spacing:.16em;">
+        <gt-icon name="sparkles" [size]="14" /> Principal Investigator
+      </span>
+      <h1 class="fw-bold lh-sm mb-3 text-white" style="font-size:clamp(1.9rem,2.6vw,2.6rem); letter-spacing:-.02em;">
+        Create your researcher account.
+      </h1>
+      <p class="text-white-50 mb-0 lh-base" style="max-width:34rem; font-size:1.02rem;">
+        Apply to open calls, track your grant applications and showcase your research outputs.
+      </p>
+    </div>
+
+    <div class="d-flex align-items-center gap-2 text-white-50" style="font-size:.82rem;">
+      <span class="text-mint"><gt-icon name="shield-check" [size]="16" /></span> Other roles are provisioned by your administrator.
+    </div>
+  </aside>
+
+  <!-- ============ Form ============ -->
+  <main class="col d-flex align-items-center justify-content-center p-4 p-lg-5 bg-body">
+    <div class="w-100" style="max-width:44rem;">
+      <a routerLink="/" class="d-lg-none d-inline-flex align-items-center gap-2 fw-bold text-decoration-none mb-4 text-dark">
+        <span class="auth-rail-mark sm"><gt-icon name="diamond" [size]="18" /></span> GrantTrack
+      </a>
+
+      <h1 class="fw-bold mb-1 text-dark">Create account</h1>
+      <p class="text-secondary mb-4">Set up your Principal Investigator profile — it only takes a minute.</p>
+
+      <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+        <!-- ---- Section: Account ---- -->
+        <section class="border rounded-3 p-3 p-md-4 mb-3">
+          <div class="d-flex align-items-center gap-2 mb-3">
+            <span class="d-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary rounded-3" style="width:34px;height:34px;"><gt-icon name="user" [size]="17" /></span>
+            <div><div class="fw-semibold text-dark lh-1">Account details</div><div class="text-secondary" style="font-size:.8rem;">Your name, sign-in email and password.</div></div>
+          </div>
+
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label" for="nameInput">Full name <span class="text-danger">*</span></label>
+              <div class="input-group gt-input" [class.is-invalid]="invalid('name')">
+                <span class="input-group-text"><gt-icon name="user" [size]="16" /></span>
+                <input type="text" id="nameInput" class="form-control py-2" formControlName="name"
+                       [class.is-invalid]="invalid('name')" placeholder="Dr. Jane Smith" />
+              </div>
+              @if (invalid('name')) { <div class="d-flex align-items-center gap-1 text-danger small mt-1"><gt-icon name="alert-triangle" [size]="13" /> Name is required.</div> }
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label" for="emailInput">Email <span class="text-danger">*</span></label>
+              <div class="input-group gt-input" [class.is-invalid]="invalid('email')">
+                <span class="input-group-text"><gt-icon name="mail" [size]="16" /></span>
+                <input type="email" id="emailInput" class="form-control py-2" formControlName="email"
+                       [class.is-invalid]="invalid('email')" placeholder="you@institution.edu" />
+              </div>
+              @if (invalid('email')) { <div class="d-flex align-items-center gap-1 text-danger small mt-1"><gt-icon name="alert-triangle" [size]="13" /> A valid email is required.</div> }
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label" for="passwordInput">Password <span class="text-danger">*</span></label>
+              <div class="input-group gt-input" [class.is-invalid]="invalid('password')">
+                <span class="input-group-text"><gt-icon name="lock" [size]="16" /></span>
+                <input #pw type="password" id="passwordInput" class="form-control py-2" formControlName="password"
+                       [class.is-invalid]="invalid('password')" placeholder="At least 8 characters" />
+                <button type="button" class="gt-eye" tabindex="-1"
+                        (click)="pw.type = pw.type === 'password' ? 'text' : 'password'"
+                        [attr.aria-label]="pw.type === 'password' ? 'Show password' : 'Hide password'">
+                  <gt-icon name="eye" [size]="16" />
+                </button>
+              </div>
+              @if (invalid('password')) { <div class="d-flex align-items-center gap-1 text-danger small mt-1"><gt-icon name="alert-triangle" [size]="13" /> Password must be at least 8 characters.</div> }
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label" for="confirmPasswordInput">Confirm password <span class="text-danger">*</span></label>
+              <div class="input-group gt-input" [class.is-invalid]="invalid('confirmPassword') || (form.hasError('mismatch') && form.get('confirmPassword')?.touched)">
+                <span class="input-group-text"><gt-icon name="lock" [size]="16" /></span>
+                <input #pw2 type="password" id="confirmPasswordInput" class="form-control py-2" formControlName="confirmPassword"
+                       [class.is-invalid]="invalid('confirmPassword') || (form.hasError('mismatch') && form.get('confirmPassword')?.touched)" placeholder="Re-enter password" />
+                <button type="button" class="gt-eye" tabindex="-1"
+                        (click)="pw2.type = pw2.type === 'password' ? 'text' : 'password'"
+                        [attr.aria-label]="pw2.type === 'password' ? 'Show password' : 'Hide password'">
+                  <gt-icon name="eye" [size]="16" />
+                </button>
+              </div>
+              @if (invalid('confirmPassword')) { <div class="d-flex align-items-center gap-1 text-danger small mt-1"><gt-icon name="alert-triangle" [size]="13" /> Please confirm your password.</div> }
+              @else if (form.hasError('mismatch') && form.get('confirmPassword')?.touched) { <div class="d-flex align-items-center gap-1 text-danger small mt-1"><gt-icon name="alert-triangle" [size]="13" /> Passwords do not match.</div> }
+            </div>
+          </div>
+        </section>
+
+        <!-- ---- Section: Contact ---- -->
+        <section class="border rounded-3 p-3 p-md-4 mb-3">
+          <div class="d-flex align-items-center gap-2 mb-3">
+            <span class="d-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary rounded-3" style="width:34px;height:34px;"><gt-icon name="bell" [size]="17" /></span>
+            <div><div class="fw-semibold text-dark lh-1">Contact</div><div class="text-secondary" style="font-size:.8rem;">Optional — how we can reach you.</div></div>
+          </div>
+
+          <div class="row g-3">
+            <div class="col-4 col-md-3">
+              <label class="form-label" for="countryCodeInput">Code</label>
+              <input type="text" id="countryCodeInput" class="form-control py-2" formControlName="countryCode" placeholder="+91" style="border-radius:10px;" />
+            </div>
+            <div class="col-8 col-md-9">
+              <label class="form-label" for="phoneInput">Mobile number</label>
+              <div class="input-group gt-input">
+                <span class="input-group-text"><gt-icon name="bell" [size]="16" /></span>
+                <input type="tel" id="phoneInput" class="form-control py-2" formControlName="phone" placeholder="98765 43210" />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ---- Section: Institution ---- -->
+        <section class="border rounded-3 p-3 p-md-4 mb-3">
+          <div class="d-flex align-items-center gap-2 mb-3">
+            <span class="d-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary rounded-3" style="width:34px;height:34px;"><gt-icon name="building" [size]="17" /></span>
+            <div><div class="fw-semibold text-dark lh-1">Institution</div><div class="text-secondary" style="font-size:.8rem;">Your affiliated organisation and role.</div></div>
+          </div>
+
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="form-label" for="institutionInput">Institution <span class="text-danger">*</span></label>
+              <div class="input-group gt-input" [class.is-invalid]="invalid('institutionId')">
+                <span class="input-group-text"><gt-icon name="building" [size]="16" /></span>
+                <input class="form-control py-2" id="institutionInput" formControlName="institutionSearch" list="institutionsList"
+                       placeholder="Search for your institution…" (change)="onInstitutionSelected($event)"
+                       [class.is-invalid]="invalid('institutionId')" />
+              </div>
+              <datalist id="institutionsList">
+                @for (i of institutions(); track i.id) { <option [value]="i.name"></option> }
+              </datalist>
+              @if (invalid('institutionId')) { <div class="d-flex align-items-center gap-1 text-danger small mt-1"><gt-icon name="alert-triangle" [size]="13" /> Please select your institution from the list.</div> }
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label" for="departmentInput">Department</label>
+              <div class="input-group gt-input">
+                <span class="input-group-text"><gt-icon name="layers" [size]="16" /></span>
+                <input class="form-control py-2" id="departmentInput" formControlName="department" placeholder="e.g. Computer Science" />
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="educationInput">Qualifications</label>
+              <div class="input-group gt-input">
+                <span class="input-group-text"><gt-icon name="award" [size]="16" /></span>
+                <input class="form-control py-2" id="educationInput" formControlName="education" placeholder="e.g. PhD in Physics" />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ---- Section: Documents ---- -->
+        <section class="border rounded-3 p-3 p-md-4 mb-3">
+          <div class="d-flex align-items-center gap-2 mb-3">
+            <span class="d-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary rounded-3" style="width:34px;height:34px;"><gt-icon name="upload-cloud" [size]="17" /></span>
+            <div><div class="fw-semibold text-dark lh-1">Verification documents</div><div class="text-secondary" style="font-size:.8rem;">Optional — helps us verify your affiliation.</div></div>
+          </div>
+
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label" for="collegeIdInput">College / staff ID <span class="text-muted fw-normal">(PDF or image)</span></label>
+              <input type="file" id="collegeIdInput" class="form-control" accept=".pdf,image/*" (change)="onCollegeIdSelected($event)" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="photoInput">Profile photo <span class="text-muted fw-normal">(image)</span></label>
+              <input type="file" id="photoInput" class="form-control" accept="image/*" (change)="onProfilePhotoSelected($event)" />
+            </div>
+          </div>
+        </section>
+
+        <div class="alert alert-success d-flex gap-2 border-0 align-items-start">
+          <gt-icon name="shield-check" [size]="18" class="flex-shrink-0 mt-1" />
+          <div class="small">You'll be registered as a <strong>Researcher (Principal Investigator)</strong>. Reviewer, finance, compliance and administrator roles are provisioned securely by your institution's administrator.</div>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100 py-2 d-flex align-items-center justify-content-center gap-1" [disabled]="submitting()">
+          @if (submitting()) {
+            <span class="spinner-border spinner-border-sm" aria-hidden="true"></span> Creating account…
+          } @else {
+            Create researcher account <gt-icon name="chevron-right" [size]="17" />
+          }
+        </button>
+      </form>
+
+      <p class="text-center text-secondary mt-4 mb-0 small">
+        Already registered? <a routerLink="/login" class="text-decoration-none fw-semibold">Sign in</a>
+      </p>
+    </div>
+  </main>
+</div>

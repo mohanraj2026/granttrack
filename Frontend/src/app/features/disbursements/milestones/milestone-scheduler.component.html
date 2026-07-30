@@ -1,0 +1,310 @@
+<gt-disbursement-tabs />
+
+<gt-page-header title="Milestone Scheduler" subtitle="Schedule milestones and process the finance approval queue.">
+  <button class="btn btn-primary d-inline-flex align-items-center gap-2" *gtHasRole="[Role.FINANCE_OFFICER, Role.GRANT_ADMIN, Role.ADMIN]" (click)="openCreate()">
+    <gt-icon name="plus" [size]="16" /> New milestone
+  </button>
+</gt-page-header>
+
+<div class="card border-0 shadow-sm rounded-4 mb-4">
+  <div class="card-header bg-white border-0 pt-3 pb-0 px-4">
+    <gt-search-filter-bar
+      searchPlaceholder="Search milestones…"
+      [filters]="statusFilter"
+      (change)="onFilter($event)">
+      <div style="width:250px">
+        <gt-searchable-select
+          [ngModel]="awardId()"
+          (ngModelChange)="onAwardId($event)"
+          [options]="awardOptions()"
+          placeholder="All Awards"
+          searchPlaceholder="Search awards…">
+        </gt-searchable-select>
+      </div>
+    </gt-search-filter-bar>
+  </div>
+
+  @if (!timelineMode()) {
+    <div class="card-body p-0">
+      <gt-data-table
+        [columns]="columns"
+        [rows]="rows()"
+        [loading]="loading()"
+        [sortField]="(query().sort || '').split(',')[0]"
+        [sortDir]="$any((query().sort || '').split(',')[1] || 'asc')"
+        (sortChange)="onSort($event)"
+        [rowActions]="actions"
+        emptyTitle="No milestones"
+        emptySubtitle="Create a milestone to schedule a disbursement.">
+        <ng-template #actions let-row>
+          <gt-dropdown-menu>
+            @if (row.status === 'UPCOMING') {
+              <button class="dropdown-item py-2" *gtHasRole="[Role.FINANCE_OFFICER, Role.GRANT_ADMIN, Role.ADMIN]" (click)="openEdit(row)">
+                Edit
+              </button>
+              <button class="dropdown-item py-2" *gtHasRole="[Role.RESEARCHER]" (click)="openEvidence(row)">
+                Submit Evidence
+              </button>
+            }
+            @if (row.status === 'EVIDENCE_SUBMITTED') {
+              <button class="dropdown-item py-2" *gtHasRole="[Role.FINANCE_OFFICER, Role.GRANT_ADMIN]" (click)="openReview(row)">
+                Review &amp; Approve
+              </button>
+            }
+            @if (row.status === 'APPROVED') {
+              <button class="dropdown-item py-2" *gtHasRole="[Role.FINANCE_OFFICER]" (click)="openRelease(row)">
+                Release Funds
+              </button>
+            }
+          </gt-dropdown-menu>
+        </ng-template>
+      </gt-data-table>
+    </div>
+
+    <div class="card-footer bg-white border-top px-4 py-3">
+      <gt-paginator
+        [page]="query().page || 0" [size]="query().size || 20"
+        [totalElements]="total()" [totalPages]="totalPages()"
+        (pageChange)="onPage($event)" (sizeChange)="onSize($event)" />
+    </div>
+  } @else {
+    <div class="timeline-container p-4 position-relative">
+      @if (loading()) {
+        <div class="text-center p-4 text-secondary">Loading timeline…</div>
+      } @else if (rows().length === 0) {
+        <div class="text-center p-5 bg-body-tertiary rounded-3">
+          <h3 class="h5 fw-bold mt-0">No milestones found</h3>
+          <p class="text-secondary">There are no milestones scheduled for this award yet.</p>
+          <button class="btn btn-primary d-inline-flex align-items-center gap-2" *gtHasRole="[Role.FINANCE_OFFICER, Role.GRANT_ADMIN, Role.ADMIN]" (click)="openCreate()"><gt-icon name="plus" [size]="16" /> Create first milestone</button>
+        </div>
+      } @else {
+        <div class="timeline ps-5 ms-3 border-start border-3 position-relative" style="border-color: var(--bs-gray-300) !important;">
+          @for (m of rows(); track m.id) {
+            <div class="timeline-item card shadow-sm border-0 mb-4 position-relative">
+              <!-- Timeline node dot -->
+              <div class="timeline-dot position-absolute bg-white border border-3 border-primary rounded-circle" style="left: -4.3rem; top: 1.5rem; width: 1.25rem; height: 1.25rem; z-index: 1;">
+                @if (m.status === 'DISBURSED') {
+                  <div class="bg-primary w-100 h-100 rounded-circle"></div>
+                }
+              </div>
+              
+              <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between mb-3 pb-3 border-bottom">
+                  <div>
+                    <span class="badge bg-light text-secondary border me-2 font-monospace">Milestone #{{ m.milestoneNumber }}</span>
+                    <strong class="fs-5">{{ m.description || 'Disbursement Tranche' }}</strong>
+                  </div>
+                  <div class="d-flex gap-3 align-items-center">
+                    <span class="small text-muted">Due: {{ (m.dueDate | date) || 'TBD' }}</span>
+                    <strong class="fs-5 text-success">{{ m.amount | currency:'INR':'symbol':'1.0-0' }}</strong>
+                    <span class="badge" [ngClass]="{
+                      'bg-info': m.status === 'UPCOMING',
+                      'bg-warning text-dark': m.status === 'EVIDENCE_SUBMITTED',
+                      'bg-primary': m.status === 'APPROVED',
+                      'bg-success': m.status === 'DISBURSED',
+                      'bg-danger': m.status === 'OVERDUE'
+                    }">{{ m.status.replace('_', ' ') }}</span>
+                  </div>
+                </div>
+
+                <div class="d-flex align-items-center justify-content-between">
+                  <div>
+                    <span class="small text-muted">Evidence Required: <strong class="text-dark">{{ m.evidenceRequired ? 'Yes' : 'No' }}</strong></span>
+                  </div>
+                  
+                  <div class="d-flex gap-2">
+                    @if (m.status === 'UPCOMING') {
+                      <button class="btn btn-sm btn-outline-secondary" *gtHasRole="[Role.FINANCE_OFFICER, Role.GRANT_ADMIN, Role.ADMIN]" (click)="openEdit(m)">Edit</button>
+                      <button class="btn btn-sm btn-primary shadow-sm" *gtHasRole="[Role.RESEARCHER]" (click)="openEvidence(m)">Submit Evidence</button>
+                    }
+                    @if (m.status === 'EVIDENCE_SUBMITTED') {
+                      <button class="btn btn-sm btn-primary shadow-sm" *gtHasRole="[Role.FINANCE_OFFICER, Role.GRANT_ADMIN]" (click)="openReview(m)">Review &amp; Approve</button>
+                    }
+                    @if (m.status === 'APPROVED') {
+                      <button class="btn btn-sm btn-success shadow-sm" *gtHasRole="[Role.FINANCE_OFFICER]" (click)="openRelease(m)">
+                        Release Funds
+                      </button>
+                    }
+                  </div>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+</div>
+
+<gt-modal [open]="modalOpen()" [title]="modalTitle()" [width]="640" (closed)="modalOpen.set(false)">
+  <form [formGroup]="form" id="milestoneForm" (ngSubmit)="save()">
+    <div class="row g-3">
+      <div class="col-md-8">
+        <label class="form-label">Award <span class="text-danger">*</span></label>
+        <gt-searchable-select
+          formControlName="awardId"
+          [options]="awardOptions()"
+          placeholder="Select award…"
+          searchPlaceholder="Search by Award #…"
+          [invalid]="invalid('awardId')">
+        </gt-searchable-select>
+        @if (invalid('awardId')) { <div class="d-flex align-items-center gap-1 text-danger small mt-1"><gt-icon name="alert-triangle" [size]="13" /> Award is required.</div> }
+      </div>
+      <div class="col-md-4">
+        <label class="form-label" for="milestoneNumber">Milestone number <span class="text-danger">*</span></label>
+        <div class="input-group gt-input" [class.is-invalid]="invalid('milestoneNumber')">
+          <span class="input-group-text"><gt-icon name="layers" [size]="16" /></span>
+          <input type="number" class="form-control py-2" formControlName="milestoneNumber" id="milestoneNumber" [class.is-invalid]="invalid('milestoneNumber')" placeholder="e.g. 1" min="1" />
+        </div>
+        @if (invalid('milestoneNumber')) { <div class="d-flex align-items-center gap-1 text-danger small mt-1"><gt-icon name="alert-triangle" [size]="13" /> Required.</div> }
+      </div>
+      <div class="col-12">
+        <label class="form-label" for="description">Description</label>
+        <textarea class="form-control" formControlName="description" id="description" rows="2" placeholder="What this tranche covers…" style="border-radius:10px;"></textarea>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label" for="dueDate">Due date</label>
+        <div class="input-group gt-input">
+          <span class="input-group-text"><gt-icon name="calendar" [size]="16" /></span>
+          <input type="date" class="form-control py-2" formControlName="dueDate" id="dueDate" />
+        </div>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label" for="amount">Amount <span class="text-danger">*</span></label>
+        <div class="input-group gt-input" [class.is-invalid]="invalid('amount')">
+          <span class="input-group-text">₹</span>
+          <input type="number" class="form-control py-2" formControlName="amount" id="amount" [class.is-invalid]="invalid('amount')" placeholder="e.g. 100000" min="0" />
+        </div>
+        @if (invalid('amount')) { <div class="d-flex align-items-center gap-1 text-danger small mt-1"><gt-icon name="alert-triangle" [size]="13" /> Amount is required.</div> }
+      </div>
+      <div class="col-12">
+        <div class="form-check">
+          <input type="checkbox" class="form-check-input" formControlName="evidenceRequired" id="evidenceRequired" />
+          <label class="form-check-label" for="evidenceRequired">Evidence required before approval</label>
+        </div>
+      </div>
+    </div>
+  </form>
+  <div footer class="d-flex justify-content-end gap-2">
+    <button class="btn btn-light" (click)="modalOpen.set(false)">Cancel</button>
+    <button class="btn btn-primary px-4 d-inline-flex align-items-center gap-2" form="milestoneForm" type="submit" [disabled]="saving()">
+      @if (saving()) { <span class="spinner-border spinner-border-sm"></span> Saving… } @else { <gt-icon name="check" [size]="16" /> Save milestone }
+    </button>
+  </div>
+</gt-modal>
+
+<gt-modal [open]="releaseModalOpen()" title="Release Funds" [width]="540" (closed)="releaseModalOpen.set(false)">
+  <form [formGroup]="releaseForm" id="releaseForm" (ngSubmit)="confirmRelease()">
+    <div class="d-flex justify-content-between align-items-center border rounded-3 bg-body-tertiary p-3 mb-4">
+      <div>
+        <div class="small fw-semibold text-dark">Milestone #{{ releaseTarget()?.milestoneNumber }} · Award #{{ releaseTarget()?.awardId }}</div>
+        <div class="text-secondary small">{{ releaseTarget()?.description }}</div>
+      </div>
+      <div class="text-end">
+        <div class="small text-secondary">Amount to release</div>
+        <strong class="fs-5 text-success">{{ releaseTarget()?.amount | currency:'INR':'symbol':'1.0-0' }}</strong>
+      </div>
+    </div>
+    <div class="row g-3">
+      <div class="col-12">
+        <label class="form-label" for="receivingAccountRef">Beneficiary account <span class="text-danger">*</span></label>
+        <div class="input-group gt-input" [class.is-invalid]="releaseInvalid('receivingAccountRef')">
+          <span class="input-group-text"><gt-icon name="landmark" [size]="16" /></span>
+          <input class="form-control py-2" formControlName="receivingAccountRef" id="receivingAccountRef" placeholder="e.g. HDFC0001234 / A/C 50100XXXXXX" [class.is-invalid]="releaseInvalid('receivingAccountRef')" />
+        </div>
+        <div class="form-text">Bank account the grant funds are paid into.</div>
+        @if (releaseInvalid('receivingAccountRef')) { <div class="d-flex align-items-center gap-1 text-danger small mt-1"><gt-icon name="alert-triangle" [size]="13" /> Beneficiary account is required.</div> }
+      </div>
+      <div class="col-md-7">
+        <label class="form-label" for="paymentReference">Payment reference (UTR/NEFT) <span class="text-danger">*</span></label>
+        <div class="input-group gt-input" [class.is-invalid]="releaseInvalid('paymentReference')">
+          <span class="input-group-text"><gt-icon name="file-check" [size]="16" /></span>
+          <input class="form-control py-2" formControlName="paymentReference" id="paymentReference" placeholder="e.g. UTR2026071500123" [class.is-invalid]="releaseInvalid('paymentReference')" />
+        </div>
+        @if (releaseInvalid('paymentReference')) { <div class="d-flex align-items-center gap-1 text-danger small mt-1"><gt-icon name="alert-triangle" [size]="13" /> Payment reference is required.</div> }
+      </div>
+      <div class="col-md-5">
+        <label class="form-label" for="releaseDate">Release date <span class="text-danger">*</span></label>
+        <div class="input-group gt-input" [class.is-invalid]="releaseInvalid('releaseDate')">
+          <span class="input-group-text"><gt-icon name="calendar" [size]="16" /></span>
+          <input type="date" class="form-control py-2" formControlName="releaseDate" id="releaseDate" [class.is-invalid]="releaseInvalid('releaseDate')" />
+        </div>
+        @if (releaseInvalid('releaseDate')) { <div class="d-flex align-items-center gap-1 text-danger small mt-1"><gt-icon name="alert-triangle" [size]="13" /> Release date is required.</div> }
+      </div>
+    </div>
+  </form>
+  <div footer class="d-flex justify-content-end gap-2">
+    <button class="btn btn-light" (click)="releaseModalOpen.set(false)">Cancel</button>
+    <button class="btn btn-success px-4 d-inline-flex align-items-center gap-2" form="releaseForm" type="submit" [disabled]="releasing()">
+      @if (releasing()) { <span class="spinner-border spinner-border-sm"></span> Releasing… } @else { <gt-icon name="landmark" [size]="16" /> Release funds }
+    </button>
+  </div>
+</gt-modal>
+
+<!-- Researcher: submit milestone evidence (note + document) -->
+<gt-modal [open]="evidenceModalOpen()" title="Submit Milestone Evidence" [width]="560" (closed)="evidenceModalOpen.set(false)">
+  <form [formGroup]="evidenceForm" id="evidenceForm" (ngSubmit)="confirmSubmitEvidence()">
+    <p class="text-secondary small mb-3">
+      Milestone <strong class="text-dark">#{{ evidenceTarget()?.milestoneNumber }}</strong> — {{ evidenceTarget()?.description }}
+    </p>
+    @if (evidenceTarget()?.evidenceReviewComment) {
+      <div class="alert alert-warning d-flex gap-2 border-0 small">
+        <gt-icon name="alert-triangle" [size]="16" class="flex-shrink-0 mt-1" />
+        <div><strong>Returned for revision:</strong> {{ evidenceTarget()?.evidenceReviewComment }}</div>
+      </div>
+    }
+    <div class="mb-3">
+      <label class="form-label" for="evNote">Completion note <span class="text-danger">*</span></label>
+      <textarea class="form-control" formControlName="note" id="evNote" rows="3"
+                placeholder="Describe what was completed for this milestone (e.g. 'Prototype fabricated and lab-tested; results attached.')" style="border-radius:10px;"></textarea>
+    </div>
+    <div>
+      <label class="form-label" for="evFile">
+        Supporting document @if (evidenceTarget()?.evidenceRequired) {<span class="text-danger">*</span>}
+      </label>
+      <input type="file" class="form-control" id="evFile" accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.zip,.png,.jpg,.jpeg" (change)="onEvidenceFile($event)" />
+      <div class="form-text">PDF, Word, Excel, image or ZIP, up to 10 MB.</div>
+    </div>
+  </form>
+  <div footer class="d-flex justify-content-end gap-2">
+    <button class="btn btn-light" (click)="evidenceModalOpen.set(false)">Cancel</button>
+    <button class="btn btn-primary px-4 d-inline-flex align-items-center gap-2" form="evidenceForm" type="submit" [disabled]="saving()">
+      @if (saving()) { <span class="spinner-border spinner-border-sm"></span> Submitting… } @else { <gt-icon name="send" [size]="16" /> Submit for approval }
+    </button>
+  </div>
+</gt-modal>
+
+<!-- Finance: review submitted evidence, then approve or return -->
+<gt-modal [open]="reviewModalOpen()" title="Review Milestone Evidence" [width]="560" (closed)="reviewModalOpen.set(false)">
+  <div>
+    <p class="text-secondary small mb-3">
+      Milestone <strong class="text-dark">#{{ reviewTarget()?.milestoneNumber }}</strong> · Award #{{ reviewTarget()?.awardId }} ·
+      <strong class="text-success">{{ reviewTarget()?.amount | currency:'INR':'symbol':'1.0-0' }}</strong>
+    </p>
+    <div class="mb-3">
+      <div class="small text-secondary fw-semibold mb-1">Researcher's completion note</div>
+      <div class="border rounded-3 p-3 bg-body-tertiary small">{{ reviewTarget()?.evidenceNote || 'No note provided.' }}</div>
+    </div>
+    <div class="mb-3">
+      @if (reviewTarget()?.hasEvidenceDocument) {
+        <button type="button" class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-2" (click)="downloadEvidence(reviewTarget()!)">
+          <gt-icon name="file-text" [size]="14" /> Download evidence ({{ reviewTarget()?.evidenceDocName }})
+        </button>
+      } @else {
+        <span class="text-secondary small">No document was attached.</span>
+      }
+    </div>
+    <form [formGroup]="reviewForm">
+      <label class="form-label" for="rvComment">Comment <span class="text-muted fw-normal">(required to return for revision)</span></label>
+      <textarea class="form-control" formControlName="comment" id="rvComment" rows="2"
+                placeholder="Optional on approval; explain what to fix if returning." style="border-radius:10px;"></textarea>
+    </form>
+  </div>
+  <div footer class="d-flex justify-content-between gap-2">
+    <button class="btn btn-outline-danger d-inline-flex align-items-center gap-2" (click)="rejectEvidence(reviewTarget()!)"><gt-icon name="x-circle" [size]="16" /> Return for revision</button>
+    <div class="d-flex gap-2">
+      <button class="btn btn-light" (click)="reviewModalOpen.set(false)">Cancel</button>
+      <button class="btn btn-success px-4 d-inline-flex align-items-center gap-2" (click)="approve(reviewTarget()!)"><gt-icon name="check" [size]="16" /> Approve milestone</button>
+    </div>
+  </div>
+</gt-modal>

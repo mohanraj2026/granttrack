@@ -1,0 +1,313 @@
+<gt-page-header
+  [title]="appId() ? 'Edit Application' : 'New Grant Application'"
+  subtitle="Complete each step, then review and submit." />
+
+<!-- Stepper -->
+<div class="d-flex flex-wrap gap-2 mb-4">
+  <button type="button" class="gt-step" [class.active]="step() === 1" [class.done]="step() > 1" (click)="goStep(1)">
+    <span class="num">@if (step() > 1) { <gt-icon name="check" [size]="13" /> } @else { 1 }</span> Proposal
+  </button>
+  <button type="button" class="gt-step" [class.active]="step() === 2" [class.done]="step() > 2" (click)="goStep(2)">
+    <span class="num">@if (step() > 2) { <gt-icon name="check" [size]="13" /> } @else { 2 }</span> Team
+  </button>
+  <button type="button" class="gt-step" [class.active]="step() === 3" [class.done]="step() > 3" (click)="goStep(3)">
+    <span class="num">@if (step() > 3) { <gt-icon name="check" [size]="13" /> } @else { 3 }</span> Budget
+  </button>
+  <button type="button" class="gt-step" [class.active]="step() === 4" (click)="goStep(4)">
+    <span class="num">4</span> Review &amp; submit
+  </button>
+</div>
+
+<div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+  <!-- STEP 1: Proposal metadata -->
+  @if (step() === 1) {
+    <div @stepSlide>
+      <h2 class="h5 fw-bold text-dark mb-4">Proposal details</h2>
+      <form [formGroup]="metaForm" (ngSubmit)="saveMetaAndContinue()" novalidate>
+        <div class="row g-3">
+          <div class="col-12">
+            <label class="form-label" for="callIdInput">Grant call <span class="text-danger">*</span></label>
+            <div class="input-group gt-input" [class.is-invalid]="metaInvalid('callId')">
+              <span class="input-group-text"><gt-icon name="sparkles" [size]="16" /></span>
+              <select class="form-select" formControlName="callId" id="callIdInput" [class.is-invalid]="metaInvalid('callId')">
+                <option [ngValue]="null" disabled>Select an open call&hellip;</option>
+                @for (c of calls(); track c.id) { <option [ngValue]="c.id">{{ c.callTitle }}</option> }
+              </select>
+            </div>
+            @if (metaInvalid('callId')) { <div class="d-flex align-items-center gap-1 text-danger small mt-1"><gt-icon name="alert-triangle" [size]="13" /> Please select an open call.</div> }
+            @if (!calls().length) { <div class="d-flex align-items-center gap-1 text-danger small mt-1"><gt-icon name="alert-triangle" [size]="13" /> No open calls are currently available.</div> }
+          </div>
+
+          <div class="col-12">
+            <label class="form-label" for="projectTitleInput">Project title <span class="text-danger">*</span></label>
+            <div class="input-group gt-input" [class.is-invalid]="metaInvalid('projectTitle')">
+              <span class="input-group-text"><gt-icon name="file-text" [size]="16" /></span>
+              <input class="form-control py-2" formControlName="projectTitle" id="projectTitleInput" [class.is-invalid]="metaInvalid('projectTitle')" placeholder="A concise, descriptive project title" />
+            </div>
+            @if (metaInvalid('projectTitle')) { <div class="d-flex align-items-center gap-1 text-danger small mt-1"><gt-icon name="alert-triangle" [size]="13" /> Project title is required.</div> }
+          </div>
+
+          <div class="col-12">
+            <label class="form-label" for="abstractInput">Research abstract</label>
+            <textarea class="form-control" formControlName="researchAbstract" id="abstractInput" rows="4" placeholder="Summarise the research problem, approach and expected impact&hellip;" style="border-radius:10px;"></textarea>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label" for="disciplineInput">Discipline</label>
+            <div class="input-group gt-input">
+              <span class="input-group-text"><gt-icon name="flask" [size]="16" /></span>
+              <input class="form-control py-2" formControlName="discipline" id="disciplineInput" placeholder="e.g. Materials Science" />
+            </div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="durationInput">Project duration (months)</label>
+            <div class="input-group gt-input">
+              <span class="input-group-text"><gt-icon name="calendar" [size]="16" /></span>
+              <input type="number" class="form-control py-2" formControlName="projectDurationMonths" id="durationInput" placeholder="e.g. 24" min="0" />
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label" for="requestedAmountInput">Requested amount <span class="text-danger">*</span></label>
+            <div class="input-group gt-input" [class.is-invalid]="metaInvalid('requestedAmount') || metaForm.hasError('amountExceedsMax')">
+              <span class="input-group-text">₹</span>
+              <input type="number" class="form-control py-2" formControlName="requestedAmount" id="requestedAmountInput" [class.is-invalid]="metaInvalid('requestedAmount') || metaForm.hasError('amountExceedsMax')" placeholder="e.g. 500000" min="0" />
+            </div>
+            @if (metaInvalid('requestedAmount')) { <div class="d-flex align-items-center gap-1 text-danger small mt-1"><gt-icon name="alert-triangle" [size]="13" /> Enter a valid amount.</div> }
+            @if (metaForm.hasError('amountExceedsMax') && metaForm.get('requestedAmount')?.touched) {
+              <div class="d-flex align-items-center gap-1 text-danger small mt-1"><gt-icon name="alert-triangle" [size]="13" /> Exceeds the scheme's maximum award ({{ maxAllowed() | currency:'INR':'symbol':'1.0-0' }}).</div>
+            }
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="institutionInput">Lead institution</label>
+            <div class="input-group gt-input">
+              <span class="input-group-text"><gt-icon name="building" [size]="16" /></span>
+              <select class="form-select" formControlName="institutionId" id="institutionInput">
+                <option [ngValue]="null">Select institution&hellip;</option>
+                @for (i of institutions(); track i.id) { <option [ngValue]="i.id">{{ i.name }}</option> }
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-end border-top mt-4 pt-4">
+          <button type="submit" class="btn btn-primary px-4 d-inline-flex align-items-center gap-2" [disabled]="saving()">
+            @if (saving()) { <span class="spinner-border spinner-border-sm"></span> Saving&hellip; } @else { Save &amp; continue <gt-icon name="chevron-right" [size]="15" /> }
+          </button>
+        </div>
+      </form>
+    </div>
+  }
+
+  <!-- STEP 2: Team -->
+  @if (step() === 2) {
+    <div @stepSlide>
+      <h2 class="h5 fw-bold text-dark mb-1">Project team</h2>
+      <p class="text-secondary small mb-4">Add co-investigators and partners. The principal investigator is you.</p>
+
+      <div class="table-responsive mb-4">
+        <table class="table align-middle mb-0">
+          <thead><tr><th class="ps-3">User ID</th><th>Institution</th><th>Role</th><th>Contribution</th><th>Status</th><th class="text-end pe-3">Actions</th></tr></thead>
+          <tbody>
+            @for (c of coInvestigators(); track c.id) {
+              <tr>
+                <td class="ps-3">{{ c.userId || '—' }}</td>
+                <td>{{ c.institutionId || '—' }}</td>
+                <td class="fw-semibold text-dark">{{ c.role }}</td>
+                <td>{{ c.contribution || '—' }}</td>
+                <td><span class="badge bg-secondary rounded-pill">{{ c.status }}</span></td>
+                <td class="text-end pe-3">
+                  <button type="button" class="btn btn-sm btn-outline-danger border-0" (click)="removeCoInvestigator(c.id)"><gt-icon name="trash-2" [size]="16" /></button>
+                </td>
+              </tr>
+            } @empty {
+              <tr><td colspan="6" class="text-secondary text-center py-4">No team members added yet.</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div class="border rounded-3 p-3 p-md-4 mb-4">
+        <div class="d-flex align-items-center gap-2 mb-3">
+          <span class="d-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary rounded-3" style="width:34px;height:34px;"><gt-icon name="users" [size]="17" /></span>
+          <div class="fw-semibold text-dark">Add team member</div>
+        </div>
+        <form [formGroup]="coiForm" (ngSubmit)="addCoInvestigator()" novalidate>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label" for="userSearchInput">User / researcher <span class="text-muted fw-normal">(optional)</span></label>
+              <div class="input-group gt-input">
+                <span class="input-group-text"><gt-icon name="user" [size]="16" /></span>
+                <input class="form-control py-2" formControlName="userSearch" id="userSearchInput" list="researchersList" placeholder="Search by name or email" (change)="onResearcherSelected($event)" />
+              </div>
+              <datalist id="researchersList">
+                @for (r of researchers(); track r.id) { <option [value]="r.name + ' (' + r.email + ') - ID: ' + r.id"></option> }
+              </datalist>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="coiInstitutionInput">Institution</label>
+              <div class="input-group gt-input">
+                <span class="input-group-text"><gt-icon name="building" [size]="16" /></span>
+                <select class="form-select" formControlName="institutionId" id="coiInstitutionInput">
+                  <option [ngValue]="null">Select institution&hellip;</option>
+                  @for (i of institutions(); track i.id) { <option [ngValue]="i.id">{{ i.name }}</option> }
+                </select>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="coiRoleInput">Role <span class="text-danger">*</span></label>
+              <div class="input-group gt-input">
+                <span class="input-group-text"><gt-icon name="users" [size]="16" /></span>
+                <select class="form-select" formControlName="role" id="coiRoleInput">
+                  @for (r of coiRoles; track r) { <option [value]="r">{{ r.replace('_', ' ') }}</option> }
+                </select>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="coiContributionInput">Contribution</label>
+              <div class="input-group gt-input">
+                <span class="input-group-text"><gt-icon name="file-text" [size]="16" /></span>
+                <input class="form-control py-2" formControlName="contribution" id="coiContributionInput" placeholder="e.g. Data analysis" />
+              </div>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-outline-secondary btn-sm mt-3 d-inline-flex align-items-center gap-2"><gt-icon name="plus" [size]="14" /> Add team member</button>
+        </form>
+      </div>
+
+      <div class="d-flex justify-content-between border-top pt-4">
+        <button type="button" class="btn btn-light px-4 d-inline-flex align-items-center gap-2" (click)="goStep(1)"><gt-icon name="chevron-left" [size]="15" /> Back</button>
+        <button type="button" class="btn btn-primary px-4 d-inline-flex align-items-center gap-2" (click)="goStep(3)">Continue <gt-icon name="chevron-right" [size]="15" /></button>
+      </div>
+    </div>
+  }
+
+  <!-- STEP 3: Budget -->
+  @if (step() === 3) {
+    <div @stepSlide>
+      <h2 class="h5 fw-bold text-dark mb-1">Budget breakdown</h2>
+      <p class="text-secondary small mb-4">Itemise the requested budget by head.</p>
+
+      <div class="table-responsive mb-3">
+        <table class="table align-middle mb-0">
+          <thead><tr><th class="ps-3">Budget head</th><th class="text-end">Amount</th><th>Justification</th><th class="text-end pe-3">Actions</th></tr></thead>
+          <tbody>
+            @for (b of budgets(); track b.id) {
+              <tr>
+                <td class="ps-3 fw-semibold text-dark">{{ b.budgetHead }}</td>
+                <td class="text-end money">{{ b.amount | currency:'INR':'symbol':'1.0-0' }}</td>
+                <td>{{ b.justification || '—' }}</td>
+                <td class="text-end pe-3">
+                  <button type="button" class="btn btn-sm btn-outline-danger border-0" (click)="removeBudget(b.id)"><gt-icon name="trash-2" [size]="16" /></button>
+                </td>
+              </tr>
+            } @empty {
+              <tr><td colspan="4" class="text-secondary text-center py-4">No budget lines added yet.</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div class="d-flex justify-content-between align-items-center bg-body-tertiary p-3 rounded-3 mb-4 border">
+        <span class="fw-semibold text-secondary">Total budgeted</span>
+        <span class="fs-5 fw-bold text-dark">{{ budgetTotal() | currency:'INR':'symbol':'1.0-0' }} <small class="text-secondary fs-6 fw-normal">/ requested {{ metaForm.value.requestedAmount | currency:'INR':'symbol':'1.0-0' }}</small></span>
+      </div>
+
+      <div class="border rounded-3 p-3 p-md-4 mb-4">
+        <div class="d-flex align-items-center gap-2 mb-3">
+          <span class="d-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary rounded-3" style="width:34px;height:34px;"><gt-icon name="dollar" [size]="17" /></span>
+          <div class="fw-semibold text-dark">Add budget line</div>
+        </div>
+        <form [formGroup]="budgetForm" (ngSubmit)="addBudget()" novalidate>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label" for="budgetHeadInput">Budget head <span class="text-danger">*</span></label>
+              <div class="input-group gt-input">
+                <span class="input-group-text"><gt-icon name="layers" [size]="16" /></span>
+                <select class="form-select" formControlName="budgetHead" id="budgetHeadInput">
+                  @for (h of budgetHeads; track h) { <option [value]="h">{{ h }}</option> }
+                </select>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="budgetAmountInput">Amount <span class="text-danger">*</span></label>
+              <div class="input-group gt-input">
+                <span class="input-group-text">₹</span>
+                <input type="number" class="form-control py-2" formControlName="amount" id="budgetAmountInput" placeholder="e.g. 150000" min="0" />
+              </div>
+            </div>
+            <div class="col-12">
+              <label class="form-label" for="justificationInput">Justification</label>
+              <div class="input-group gt-input">
+                <span class="input-group-text"><gt-icon name="file-text" [size]="16" /></span>
+                <input class="form-control py-2" formControlName="justification" id="justificationInput" placeholder="Why this cost is needed" />
+              </div>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-outline-secondary btn-sm mt-3 d-inline-flex align-items-center gap-2"><gt-icon name="plus" [size]="14" /> Add budget line</button>
+        </form>
+      </div>
+
+      <div class="d-flex justify-content-between border-top pt-4">
+        <button type="button" class="btn btn-light px-4 d-inline-flex align-items-center gap-2" (click)="goStep(2)"><gt-icon name="chevron-left" [size]="15" /> Back</button>
+        <button type="button" class="btn btn-primary px-4 d-inline-flex align-items-center gap-2" (click)="goStep(4)">Continue <gt-icon name="chevron-right" [size]="15" /></button>
+      </div>
+    </div>
+  }
+
+  <!-- STEP 4: Review & submit -->
+  @if (step() === 4) {
+    <div @stepSlide>
+      <h2 class="h5 fw-bold text-dark mb-4">Review &amp; submit</h2>
+      <div class="alert alert-warning d-flex align-items-center gap-2 border-0 mb-4">
+        <gt-icon name="alert-triangle" [size]="18" class="flex-shrink-0" />
+        <div class="small">Please verify all details. Once submitted, the application cannot be edited.</div>
+      </div>
+
+      <div class="border rounded-3 p-4 mb-4">
+        <div class="d-flex align-items-center gap-3 mb-3">
+          <span class="d-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary rounded-3" style="width:42px;height:42px;"><gt-icon name="file-text" [size]="20" /></span>
+          <div>
+            <div class="fw-bold text-dark">Abstract document</div>
+            <div class="text-secondary small">Upload your research abstract — PDF, DOC or DOCX, up to 10 MB.</div>
+          </div>
+        </div>
+
+        @if (uploadedName()) {
+          <div class="d-flex align-items-center gap-2 mb-3 px-3 py-2 bg-success bg-opacity-10 text-success rounded-3">
+            <gt-icon name="file-check" [size]="16" />
+            <span class="fw-semibold">{{ uploadedName() }}</span>
+            <span class="badge bg-success ms-auto">Attached</span>
+          </div>
+        }
+
+        <label class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-2" [class.disabled]="uploading()">
+          <gt-icon name="upload-cloud" [size]="14" />
+          {{ uploading() ? 'Uploading…' : (uploadedName() ? 'Replace document' : 'Choose document') }}
+          <input type="file" accept=".pdf,.doc,.docx" hidden (change)="onDocSelected($event)" [disabled]="uploading()" />
+        </label>
+        @if (docError()) { <div class="d-flex align-items-center gap-1 text-danger small mt-2"><gt-icon name="alert-triangle" [size]="13" /> {{ docError() }}</div> }
+      </div>
+
+      <div class="border rounded-3 p-4 mb-4">
+        <dl class="row mb-0" style="--bs-gutter-y:.75rem;">
+          <dt class="col-sm-4 text-secondary fw-normal">Grant call</dt><dd class="col-sm-8 fw-semibold text-dark mb-0">{{ callLabel(metaForm.value.callId ?? null) }}</dd>
+          <dt class="col-sm-4 text-secondary fw-normal">Project title</dt><dd class="col-sm-8 fw-semibold text-dark mb-0">{{ metaForm.value.projectTitle }}</dd>
+          <dt class="col-sm-4 text-secondary fw-normal">Discipline</dt><dd class="col-sm-8 fw-semibold text-dark mb-0">{{ metaForm.value.discipline || '—' }}</dd>
+          <dt class="col-sm-4 text-secondary fw-normal">Requested amount</dt><dd class="col-sm-8 fw-semibold text-success mb-0">{{ metaForm.value.requestedAmount | currency:'INR':'symbol':'1.0-0' }}</dd>
+          <dt class="col-sm-4 text-secondary fw-normal">Duration</dt><dd class="col-sm-8 fw-semibold text-dark mb-0">{{ metaForm.value.projectDurationMonths || '—' }} months</dd>
+          <dt class="col-sm-4 text-secondary fw-normal">Team members</dt><dd class="col-sm-8 fw-semibold text-dark mb-0">{{ coInvestigators().length }}</dd>
+          <dt class="col-sm-4 text-secondary fw-normal">Budget lines</dt><dd class="col-sm-8 fw-semibold text-dark mb-0">{{ budgets().length }} ({{ budgetTotal() | currency:'INR':'symbol':'1.0-0' }})</dd>
+          <dt class="col-sm-4 text-secondary fw-normal">Abstract document</dt><dd class="col-sm-8 fw-semibold text-dark mb-0">{{ uploadedName() || 'Not attached' }}</dd>
+        </dl>
+      </div>
+
+      <div class="d-flex justify-content-between border-top pt-4">
+        <button type="button" class="btn btn-light px-4 d-inline-flex align-items-center gap-2" (click)="goStep(3)"><gt-icon name="chevron-left" [size]="15" /> Back</button>
+        <button type="button" class="btn btn-success px-4 d-inline-flex align-items-center gap-2" (click)="submitApplication()" [disabled]="saving()">
+          @if (saving()) { <span class="spinner-border spinner-border-sm"></span> Submitting… } @else { <gt-icon name="check" [size]="16" /> Submit application }
+        </button>
+      </div>
+    </div>
+  }
+</div>

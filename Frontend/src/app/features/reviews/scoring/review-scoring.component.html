@@ -1,0 +1,169 @@
+<gt-page-header
+  [title]="'Application #' + (assignment()?.applicationId ?? id())"
+  subtitle="Blind review — score the application against each criterion." />
+
+@if (loading()) {
+  <gt-spinner label="Loading assignment…" />
+} @else if (!assignment()) {
+  <div class="card border-0 shadow-sm rounded-4 mb-4 p-4">
+    <p class="text-secondary m-0">Assignment not found.</p>
+  </div>
+} @else {
+  <!-- Status strip -->
+  <div class="card border-0 shadow-sm rounded-4 mb-4">
+    <div class="card-body d-flex gap-5 flex-wrap">
+      <div>
+        <span class="text-secondary small fw-bold text-uppercase d-block mb-1">Conflict screening</span>
+        <gt-status-badge [status]="assignment()!.conflictScreeningStatus" />
+      </div>
+      <div>
+        <span class="text-secondary small fw-bold text-uppercase d-block mb-1">Assignment status</span>
+        <gt-status-badge [status]="assignment()!.status" />
+      </div>
+    </div>
+  </div>
+
+  <!-- Blinded proposal -->
+  @if (blindApp(); as bApp) {
+    <div class="card border-0 shadow-sm rounded-4 mb-4 border-start border-4 border-primary">
+      <div class="card-body p-4">
+        <h2 class="h5 fw-bold text-dark mb-3">Blinded proposal: {{ bApp.projectTitle }}</h2>
+
+        <div class="row g-3 mb-3">
+          <div class="col-md-4">
+            <span class="text-secondary small fw-bold text-uppercase d-block">Discipline</span>
+            <strong class="text-dark">{{ bApp.discipline || '—' }}</strong>
+          </div>
+          <div class="col-md-4">
+            <span class="text-secondary small fw-bold text-uppercase d-block">Requested amount</span>
+            <strong class="text-success">{{ bApp.requestedAmount | currency: 'INR' : 'symbol' : '1.0-0' }}</strong>
+          </div>
+          <div class="col-md-4">
+            <span class="text-secondary small fw-bold text-uppercase d-block">Duration</span>
+            <strong class="text-dark">{{ bApp.projectDurationMonths ? bApp.projectDurationMonths + ' Months' : '—' }}</strong>
+          </div>
+        </div>
+
+        @if (bApp.researchAbstract) {
+          <div class="mb-3">
+            <span class="text-secondary small fw-bold text-uppercase d-block mb-1">Abstract</span>
+            <div class="p-3 bg-body-tertiary rounded-3 border small" style="line-height: 1.5;">{{ bApp.researchAbstract }}</div>
+          </div>
+        }
+
+        <div>
+          <span class="text-secondary small fw-bold text-uppercase d-block mb-2">Abstract document</span>
+          @if (bApp.abstractDocName) {
+            <button class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1" (click)="downloadAbstract()" [disabled]="downloading()">
+              <gt-icon name="file-text" [size]="14" /> {{ downloading() ? 'Downloading…' : bApp.abstractDocName }}
+            </button>
+          } @else {
+            <span class="text-secondary small">Not provided</span>
+          }
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Review gate -->
+  @if (!submitted() && !accepted()) {
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+      <div class="card-body p-4">
+        <h2 class="h5 fw-bold text-dark mb-2">Review gate</h2>
+        <p class="text-secondary small mb-3">Declare no conflict of interest, then accept the assignment to begin scoring.</p>
+        <div class="d-flex gap-2 flex-wrap">
+          <button class="btn btn-outline-secondary d-inline-flex align-items-center gap-2" [disabled]="conflictCleared()" (click)="declareNoConflict()">
+            <gt-icon name="shield-check" [size]="16" /> {{ conflictCleared() ? 'No conflict declared' : 'Declare no conflict' }}
+          </button>
+          <button class="btn btn-success d-inline-flex align-items-center gap-2" [disabled]="!conflictCleared()" (click)="acceptAssignment()">
+            <gt-icon name="check" [size]="16" /> Accept assignment
+          </button>
+          <button class="btn btn-outline-danger d-inline-flex align-items-center gap-2 ms-auto" (click)="openDecline()">
+            <gt-icon name="x-circle" [size]="16" /> Decline assignment
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Scoring -->
+  @if (accepted() || submitted()) {
+    <form [formGroup]="form" (ngSubmit)="submitAllScores()">
+      <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-4">
+          <div class="d-flex align-items-center justify-content-between mb-4 pb-3 border-bottom">
+            <h2 class="h5 fw-bold text-dark m-0">Structured scoring</h2>
+            <div class="text-secondary small">Average: <strong class="text-dark fs-6">{{ average() | number: '1.1-2' }}</strong> / 10</div>
+          </div>
+
+          @for (c of criteria; track c.key) {
+            <div class="mb-4 pb-3 border-bottom">
+              <div class="d-flex align-items-center gap-2 mb-2">
+                <label class="form-label fw-semibold m-0" [for]="c.key">{{ c.label }}</label>
+                @if (isScored(c.key)) { <span class="badge bg-success-subtle text-success rounded-pill">Submitted</span> }
+              </div>
+              <div class="row g-3">
+                <div class="col-md-3">
+                  <label class="form-label small text-secondary" [for]="c.key">Score (1–10)</label>
+                  <div class="input-group gt-input">
+                    <span class="input-group-text"><gt-icon name="scale" [size]="16" /></span>
+                    <input [id]="c.key" type="number" min="1" max="10" class="form-control py-2" [formControlName]="c.key" [attr.disabled]="submitted() || isScored(c.key) ? '' : null" placeholder="0" />
+                  </div>
+                </div>
+                <div class="col-md-9">
+                  <label class="form-label small text-secondary">Comments</label>
+                  <div class="input-group gt-input">
+                    <span class="input-group-text"><gt-icon name="file-text" [size]="16" /></span>
+                    <input type="text" class="form-control py-2" placeholder="Notes for the panel…" [formControlName]="c.key + '_comments'" [attr.disabled]="submitted() || isScored(c.key) ? '' : null" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          }
+
+          <div>
+            <label class="form-label" for="overallRec">Overall recommendation <span class="text-danger">*</span></label>
+            <div class="input-group gt-input">
+              <span class="input-group-text"><gt-icon name="check-circle" [size]="16" /></span>
+              <select class="form-select" formControlName="overallRecommendation" [attr.disabled]="submitted() ? '' : null" id="overallRec">
+                <option value="FUND_AT_FULL_AMOUNT">Fund at full amount</option>
+                <option value="FUND_AT_REDUCED">Fund at reduced amount</option>
+                <option value="DO_NOT_FUND">Do not fund</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      @if (!submitted()) {
+        <div class="d-flex gap-2 mt-4">
+          <button class="btn btn-primary px-4 d-inline-flex align-items-center gap-2" type="submit" [disabled]="saving()">
+            @if (saving()) { <span class="spinner-border spinner-border-sm"></span> Submitting… } @else { <gt-icon name="check" [size]="16" /> Submit all scores }
+          </button>
+          <button class="btn btn-success px-4 d-inline-flex align-items-center gap-2" type="button" [disabled]="saving() || !hasScores()" (click)="submitReview()">
+            <gt-icon name="send" [size]="16" /> Submit review
+          </button>
+        </div>
+      } @else {
+        <p class="text-secondary mt-3">This review has been submitted and is now read-only.</p>
+      }
+    </form>
+  }
+}
+
+<!-- Decline assignment (reason required) -->
+<gt-modal [open]="declineOpen()" title="Decline Review Assignment" [width]="520" (closed)="declineOpen.set(false)">
+  <p class="text-secondary small mb-3">
+    Declining removes this application from your queue and notifies the grant administrator so they can
+    reassign it. Please give a brief reason.
+  </p>
+  <label class="form-label" for="declineReason">Reason <span class="text-danger">*</span></label>
+  <textarea id="declineReason" class="form-control" rows="3" placeholder="e.g. Conflict of interest with a co-author; outside my area of expertise…"
+            style="border-radius:10px;" [value]="declineReason()" (input)="declineReason.set($any($event.target).value)"></textarea>
+  <div footer class="d-flex justify-content-end gap-2">
+    <button class="btn btn-light" (click)="declineOpen.set(false)">Cancel</button>
+    <button class="btn btn-danger px-4 d-inline-flex align-items-center gap-2" (click)="confirmDecline()" [disabled]="saving() || !declineReason().trim()">
+      @if (saving()) { <span class="spinner-border spinner-border-sm"></span> Declining… } @else { <gt-icon name="x-circle" [size]="16" /> Decline assignment }
+    </button>
+  </div>
+</gt-modal>

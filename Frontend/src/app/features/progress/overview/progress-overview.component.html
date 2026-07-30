@@ -1,0 +1,120 @@
+<gt-progress-tabs />
+
+<gt-page-header title="Progress Overview" subtitle="Project performance, deliverables and funding milestones at a glance.">
+  <div class="d-flex align-items-center gap-2 text-muted">
+    <gt-icon name="award" [size]="16" />
+    <select class="form-select shadow-sm" style="min-width: 280px;" [value]="awardId() ?? ''" (change)="onAwardChange($any($event.target).value)">
+      <option value="" disabled>Select award…</option>
+      @for (a of awards(); track a.id) {
+        <option [value]="a.id">Award #{{ a.id }} · App {{ a.applicationId }} · {{ fmtMoney(a.awardedAmount) }}</option>
+      }
+    </select>
+  </div>
+</gt-page-header>
+
+@if (loading()) {
+  <div class="card border-0 shadow-sm rounded-4 p-4"><gt-spinner label="Loading project analytics…" /></div>
+} @else if (!awards().length) {
+  <div class="card border-0 shadow-sm rounded-4"><gt-empty-state icon="award" title="No awards yet" subtitle="Progress analytics appear once a grant award exists." /></div>
+} @else if (loaded()) {
+
+  <!-- Stat tiles -->
+  <div class="row g-3 mb-4">
+    @for (s of stats(); track s.label; let i = $index) {
+      <div class="col-md-3" gtReveal [revealDelay]="i * 70">
+        <div class="card border-0 shadow-sm rounded-4 p-3 h-100 d-flex flex-row align-items-center gap-3 gt-hover-lift">
+          <div class="bg-primary bg-opacity-10 text-primary rounded-3 d-flex align-items-center justify-content-center flex-shrink-0" style="width: 48px; height: 48px;">
+            <gt-icon [name]="s.icon" [size]="22" />
+          </div>
+          <div>
+            <div class="fs-4 fw-bold text-dark lh-1 mb-1">{{ s.value }}</div>
+            <div class="small text-secondary fw-semibold">{{ s.label }}</div>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Charts row -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-4" gtReveal>
+      <div class="card border-0 shadow-sm rounded-4 h-100 p-4">
+        <h3 class="h6 mb-1 fw-bold">Budget Utilisation</h3>
+        <p class="text-muted small mb-4">Latest reported spend against grant budget.</p>
+        <div class="d-flex align-items-center justify-content-center">
+          <gt-ring [value]="budgetUtil()" [size]="150" [stroke]="14"
+                   [color]="budgetUtil() > 90 ? 'var(--bs-danger)' : 'var(--bs-primary)'" label="utilised" />
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4" gtReveal [revealDelay]="80">
+      <div class="card border-0 shadow-sm rounded-4 h-100 p-4">
+        <h3 class="h6 mb-1 fw-bold">Deliverables</h3>
+        <p class="text-muted small mb-4">Submission &amp; acceptance breakdown.</p>
+        <div class="d-flex align-items-center justify-content-center">
+          @if (deliverables().length) {
+            <gt-donut [segments]="deliverableSegments()" centerLabel="total" [size]="150" />
+          } @else { <gt-empty-state icon="book" title="No deliverables" subtitle="" /> }
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4" gtReveal [revealDelay]="160">
+      <div class="card border-0 shadow-sm rounded-4 h-100 p-4">
+        <h3 class="h6 mb-1 fw-bold">Progress Reports</h3>
+        <p class="text-muted small mb-4">Reporting status distribution.</p>
+        <div class="d-flex align-items-center justify-content-center">
+          @if (reports().length) {
+            <gt-donut [segments]="reportSegments()" centerLabel="total" [size]="150" />
+          } @else { <gt-empty-state icon="file-text" title="No reports" subtitle="" /> }
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Milestone timeline -->
+  <div class="card border-0 shadow-sm rounded-4 p-4 mb-4" gtReveal>
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-4">
+      <div>
+        <h3 class="h5 mb-1">Disbursement Milestones</h3>
+        <p class="text-muted small mb-0">Funding released across project stages.</p>
+      </div>
+      <div class="text-end">
+        <span class="fs-4 fw-bold text-dark">{{ fmtMoney(milestoneDisbursed()) }}</span>
+        <span class="text-muted small"> of {{ fmtMoney(milestoneTotal()) }} released</span>
+      </div>
+    </div>
+
+    <!-- Funds released progress bar -->
+    <div class="progress mb-2 bg-light border" style="height: 12px; border-radius: 999px;">
+      <div class="progress-bar bg-primary" role="progressbar" [style.width.%]="pctDisbursed()" [attr.aria-valuenow]="pctDisbursed()" aria-valuemin="0" aria-valuemax="100"></div>
+    </div>
+    <div class="small text-muted fw-medium">{{ pctDisbursed() | number: '1.0-0' }}% of total grant funds disbursed</div>
+
+    @if (sortedMilestones().length) {
+      <div class="gt-timeline mt-5">
+        @for (m of sortedMilestones(); track m.id; let i = $index) {
+          <div class="gt-tl-node" gtReveal [revealDelay]="i * 80">
+            <div class="gt-tl-dot shadow-sm" [style.background]="milestoneColor(m.status)">
+              @if (m.status === 'DISBURSED') { <gt-icon name="check" [size]="14" /> }
+              @else { {{ m.milestoneNumber }} }
+            </div>
+            <div class="gt-tl-card shadow-sm border rounded-3 p-3 bg-white">
+              <div class="fs-5 fw-bold text-dark mb-1">{{ fmtMoney(m.amount) }}</div>
+              <div class="small text-secondary mb-2" style="min-height: 2.4em;">{{ m.description || ('Milestone ' + m.milestoneNumber) }}</div>
+              <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                <span class="badge" [style.background]="milestoneColor(m.status) + '22'" [style.color]="milestoneColor(m.status)">
+                  {{ humanize(m.status) }}
+                </span>
+                @if (m.dueDate) { <span class="small text-muted d-flex align-items-center gap-1"><gt-icon name="calendar" [size]="13" /> {{ m.dueDate | date: 'mediumDate' }}</span> }
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    } @else {
+      <gt-empty-state icon="landmark" title="No milestones scheduled" subtitle="Milestones appear once finance sets up the disbursement plan." />
+    }
+  </div>
+}

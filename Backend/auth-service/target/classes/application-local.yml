@@ -1,0 +1,18 @@
+spring:
+  jpa:
+    show-sql: true
+
+# Local-development-only secrets. Well-known and REJECTED at startup under any non-local
+# profile (see JwtTokenProvider#validateSecret / DataInitializer#resolveAdminPassword).
+# The JWT secret MUST match every other service's secret (shared-secret HMAC).
+granttrack:
+  security:
+    jwt:
+      secret: Y3JhbnRUcmFja1N1cGVyU2VjcmV0S2V5Rm9ySldUU2lnbmluZzEyMzQ1Njc4OTA=
+  bootstrap:
+    admin-password: Admin@12345
+
+logging:
+  level:
+    com.granttrack: DEBUG
+    org.springframework.security: DEBUG

@@ -1,0 +1,95 @@
+<div class="row g-0 min-vh-100">
+  <!-- ============ Brand rail ============ -->
+  <aside class="col-lg-5 col-xl-4 auth-rail d-none d-lg-flex flex-column p-5 text-white">
+    <a routerLink="/" class="d-inline-flex align-items-center gap-2 text-white text-decoration-none fw-bold fs-5">
+      <span class="auth-rail-mark"><gt-icon name="shield-check" [size]="22" /></span> GrantTrack
+    </a>
+
+    <span class="d-inline-flex align-items-center gap-2 text-uppercase fw-semibold text-mint mt-5 mb-3" style="font-size:.72rem; letter-spacing:.14em;">
+      <gt-icon name="lock" [size]="14" /> Staff &amp; Administrator Portal
+    </span>
+    <h1 class="fw-bold lh-sm mb-3" style="font-size:clamp(1.7rem,2.5vw,2.35rem); max-width:16ch;">Secure access for operational roles.</h1>
+    <p class="text-white-50 mb-5 lh-base" style="max-width:32rem;">
+      Sign in with the credentials issued to you. Reviewer, compliance, finance, grant-administrator
+      and system-administrator accounts are provisioned internally — never through public sign-up.
+    </p>
+
+    <ul class="list-unstyled d-grid gap-3 mb-auto">
+      <li class="d-flex gap-3">
+        <span class="auth-rail-fi"><gt-icon name="settings" [size]="18" /></span>
+        <span><span class="d-block fw-semibold text-white">Grant &amp; system administrators</span><span class="d-block text-white-50 small">Configure schemes, calls and users.</span></span>
+      </li>
+      <li class="d-flex gap-3">
+        <span class="auth-rail-fi"><gt-icon name="scale" [size]="18" /></span>
+        <span><span class="d-block fw-semibold text-white">Reviewers &amp; compliance</span><span class="d-block text-white-50 small">Assess proposals and monitor progress.</span></span>
+      </li>
+      <li class="d-flex gap-3">
+        <span class="auth-rail-fi"><gt-icon name="landmark" [size]="18" /></span>
+        <span><span class="d-block fw-semibold text-white">Finance officers</span><span class="d-block text-white-50 small">Approve milestones and release funds.</span></span>
+      </li>
+    </ul>
+
+    <div class="d-flex align-items-center gap-2 mt-5 pt-4 border-top border-light border-opacity-10 text-white-50" style="font-size:.82rem;">
+      <span class="text-mint"><gt-icon name="shield-check" [size]="16" /></span> Access is logged and role-restricted.
+    </div>
+  </aside>
+
+  <!-- ============ Form ============ -->
+  <main class="col d-flex align-items-center justify-content-center p-4 p-lg-5 bg-body">
+    <div class="w-100" style="max-width:26rem;">
+      <a routerLink="/" class="d-lg-none d-inline-flex align-items-center gap-2 fw-bold text-decoration-none mb-4 text-dark">
+        <span class="auth-rail-mark sm"><gt-icon name="shield-check" [size]="18" /></span> GrantTrack
+      </a>
+
+      <span class="badge rounded-pill text-uppercase fw-bold mb-3 d-inline-flex align-items-center gap-1 alert-success border" style="letter-spacing:.05em;">
+        <gt-icon name="shield-check" [size]="13" /> Staff Portal
+      </span>
+
+      <h1 class="fw-bold mb-1 text-dark">Staff sign in</h1>
+      <p class="text-secondary mb-4">Use the email &amp; password provided by your administrator.</p>
+
+      <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+        <!-- Email -->
+        <div class="mb-3">
+          <label class="form-label" for="emailInput">Work email <span class="text-danger">*</span></label>
+          <div class="input-group gt-input" [class.is-invalid]="invalid('email')">
+            <span class="input-group-text"><gt-icon name="mail" [size]="17" /></span>
+            <input type="email" id="emailInput" class="form-control py-2" formControlName="email"
+                   [class.is-invalid]="invalid('email')" placeholder="you@granttrack.local" autocomplete="username" />
+          </div>
+          @if (invalid('email')) { <div class="d-flex align-items-center gap-1 text-danger small mt-1"><gt-icon name="alert-triangle" [size]="13" /> A valid email is required.</div> }
+        </div>
+
+        <!-- Password -->
+        <div class="mb-4">
+          <label class="form-label" for="passwordInput">Password <span class="text-danger">*</span></label>
+          <div class="input-group gt-input" [class.is-invalid]="invalid('password')">
+            <span class="input-group-text"><gt-icon name="lock" [size]="17" /></span>
+            <input #pw type="password" id="passwordInput" class="form-control py-2" formControlName="password"
+                   [class.is-invalid]="invalid('password')" placeholder="Enter your password" autocomplete="current-password" />
+            <button type="button" class="gt-eye" tabindex="-1"
+                    (click)="pw.type = pw.type === 'password' ? 'text' : 'password'"
+                    [attr.aria-label]="pw.type === 'password' ? 'Show password' : 'Hide password'">
+              <gt-icon name="eye" [size]="17" />
+            </button>
+          </div>
+          @if (invalid('password')) { <div class="d-flex align-items-center gap-1 text-danger small mt-1"><gt-icon name="alert-triangle" [size]="13" /> Password is required.</div> }
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100 py-2 d-flex align-items-center justify-content-center gap-1" [disabled]="submitting()">
+          @if (submitting()) {
+            <span class="spinner-border spinner-border-sm" aria-hidden="true"></span> Signing in…
+          } @else {
+            Sign in to portal <gt-icon name="chevron-right" [size]="17" />
+          }
+        </button>
+      </form>
+
+      <p class="text-center text-secondary mt-4 mb-0 small">
+        Researcher? <a routerLink="/login" class="text-decoration-none fw-semibold">Use the standard sign in</a>
+        <span class="mx-2">&middot;</span>
+        <a routerLink="/" class="text-decoration-none fw-semibold">Back to home</a>
+      </p>
+    </div>
+  </main>
+</div>

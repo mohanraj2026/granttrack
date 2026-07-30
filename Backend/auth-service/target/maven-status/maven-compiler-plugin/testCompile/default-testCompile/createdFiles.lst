@@ -1,0 +1,5 @@
+com\granttrack\auth\controller\AuthControllerTest.class
+com\granttrack\auth\service\impl\AuditLogServiceImplTest.class
+com\granttrack\auth\service\impl\AuthServiceImplTest.class
+com\granttrack\user\service\impl\UserServiceImplTest.class
+com\granttrack\user\controller\UserControllerTest.class

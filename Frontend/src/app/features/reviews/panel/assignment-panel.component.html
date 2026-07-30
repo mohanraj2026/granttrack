@@ -1,0 +1,306 @@
+<gt-reviews-tabs />
+
+<gt-page-header title="Reviewer Assignments" subtitle="Assign reviewers and record panel decisions.">
+  <button class="btn btn-outline-secondary d-inline-flex align-items-center gap-2" (click)="openAssign()" *gtHasRole="[Role.GRANT_ADMIN, Role.ADMIN]">
+    <gt-icon name="user" [size]="16" /> Assign reviewer
+  </button>
+  <button class="btn btn-primary d-inline-flex align-items-center gap-2" (click)="openPanel()" *gtHasRole="[Role.GRANT_ADMIN, Role.ADMIN]">
+    <gt-icon name="scale" [size]="16" /> Record panel decision
+  </button>
+</gt-page-header>
+
+<div class="card border-0 shadow-sm rounded-4 mb-4">
+  <div class="card-header bg-white border-0 pt-3 pb-0 px-4">
+    <gt-search-filter-bar
+      [showSearch]="false"
+      [filters]="statusFilter"
+      (change)="onFilter($event)">
+      <input
+        type="number"
+        class="form-control"
+        style="max-width:180px"
+        placeholder="Application #"
+        [(ngModel)]="appIdFilter"
+        (change)="applyAppIdFilter()" />
+    </gt-search-filter-bar>
+  </div>
+
+  <div class="card-body p-0">
+    <gt-data-table
+      [columns]="columns"
+      [rows]="rows()"
+      [loading]="loading()"
+      [sortField]="(query().sort || '').split(',')[0]"
+      [sortDir]="$any((query().sort || '').split(',')[1] || 'asc')"
+      (sortChange)="onSort($event)"
+      emptyTitle="No assignments"
+      emptySubtitle="Assign a reviewer to get started.">
+    </gt-data-table>
+  </div>
+
+  <div class="card-footer bg-white border-top px-4 py-3">
+    <gt-paginator
+      [page]="query().page || 0" [size]="query().size || 20"
+      [totalElements]="total()" [totalPages]="totalPages()"
+      (pageChange)="onPage($event)" (sizeChange)="onSize($event)" />
+  </div>
+</div>
+
+<!-- Recorded panel decisions (Grant Admin can review & edit) -->
+<div class="card border-0 shadow-sm rounded-4 mb-4">
+  <div class="card-header bg-white border-0 pt-4 px-4 pb-2 d-flex justify-content-between align-items-center">
+    <h2 class="h6 fw-bold text-dark mb-0">Panel decisions</h2>
+    <span class="text-secondary small">{{ panelDecisions().length }} recorded</span>
+  </div>
+  <div class="table-responsive">
+    <table class="table align-middle mb-0">
+      <thead>
+        <tr>
+          <th class="ps-4">Application</th>
+          <th>Decision</th>
+          <th class="text-end">Awarded</th>
+          <th class="d-none d-md-table-cell">Panel date</th>
+          <th class="d-none d-md-table-cell">Finance officer</th>
+          <th class="text-end pe-4">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (pd of panelDecisions(); track pd.id) {
+          <tr>
+            <td class="ps-4 font-monospace small fw-semibold">APP{{ pd.applicationId.toString().padStart(4, '0') }}</td>
+            <td><span class="badge rounded-pill" [class.bg-success-subtle]="isAwardDecision(pd.awardDecision)" [class.text-success]="isAwardDecision(pd.awardDecision)" [class.bg-secondary-subtle]="!isAwardDecision(pd.awardDecision)" [class.text-secondary]="!isAwardDecision(pd.awardDecision)">{{ pd.awardDecision }}</span></td>
+            <td class="text-end fw-semibold">{{ pd.awardedAmount ? (pd.awardedAmount | currency:'INR':'symbol':'1.0-0') : '—' }}</td>
+            <td class="d-none d-md-table-cell text-secondary small">{{ pd.panelDate ? (pd.panelDate | date:'mediumDate') : '—' }}</td>
+            <td class="d-none d-md-table-cell font-monospace small text-secondary">{{ pd.financeOfficerId ? 'GTU' + pd.financeOfficerId.toString().padStart(4, '0') : '—' }}</td>
+            <td class="text-end pe-4">
+              <button class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1" (click)="openEditPanel(pd)">
+                <gt-icon name="edit" [size]="14" /> Edit
+              </button>
+            </td>
+          </tr>
+        } @empty {
+          <tr><td colspan="6" class="text-center text-secondary py-4">No panel decisions recorded yet.</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Edit panel decision -->
+<gt-modal [open]="editPanelOpen()" title="Edit Panel Decision" [width]="620" (closed)="editPanelOpen.set(false)">
+  @if (editingPanel(); as pd) {
+    <div class="d-flex flex-wrap gap-4 mb-3">
+      <div>
+        <div class="text-secondary small text-uppercase fw-bold">Application</div>
+        <div class="fw-semibold text-dark font-monospace">APP{{ pd.applicationId.toString().padStart(4, '0') }}</div>
+      </div>
+      <div>
+        <div class="text-secondary small text-uppercase fw-bold">Decision</div>
+        <span class="badge rounded-pill bg-primary-subtle text-primary">{{ pd.awardDecision }}</span>
+        <span class="text-secondary small ms-1">(outcome is final)</span>
+      </div>
+    </div>
+    <form [formGroup]="editPanelForm" id="editPanelForm" (ngSubmit)="saveEditPanel()">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label" for="epPanelDate">Panel date</label>
+          <div class="input-group gt-input">
+            <span class="input-group-text"><gt-icon name="calendar" [size]="16" /></span>
+            <input type="date" class="form-control py-2" formControlName="panelDate" id="epPanelDate" />
+          </div>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="epConsensus">Consensus score</label>
+          <div class="input-group gt-input">
+            <span class="input-group-text"><gt-icon name="scale" [size]="16" /></span>
+            <input type="number" class="form-control py-2" formControlName="consensusScore" id="epConsensus" placeholder="e.g. 8.5" />
+          </div>
+        </div>
+        @if (isAwardDecision(pd.awardDecision)) {
+          <div class="col-md-6">
+            <label class="form-label" for="epAmount">Awarded amount <span class="text-danger">*</span></label>
+            <div class="input-group gt-input">
+              <span class="input-group-text">₹</span>
+              <input type="number" class="form-control py-2" formControlName="awardedAmount" id="epAmount" placeholder="e.g. 500000" min="0" />
+            </div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Finance officer <span class="text-danger">*</span></label>
+            <gt-searchable-select
+              formControlName="financeOfficerId"
+              [options]="financeOfficerOptions()"
+              placeholder="Select finance officer…"
+              searchPlaceholder="Search finance officers…">
+            </gt-searchable-select>
+          </div>
+        }
+        <div class="col-12">
+          <label class="form-label" for="epConditions">Conditions attached</label>
+          <textarea class="form-control" formControlName="conditionsAttached" id="epConditions" rows="3" placeholder="Any conditions on the award…" style="border-radius:10px;"></textarea>
+        </div>
+      </div>
+    </form>
+  }
+  <div footer class="d-flex justify-content-end gap-2">
+    <button class="btn btn-light" (click)="editPanelOpen.set(false)">Cancel</button>
+    <button class="btn btn-primary px-4 d-inline-flex align-items-center gap-2" form="editPanelForm" type="submit" [disabled]="savingEditPanel()">
+      @if (savingEditPanel()) { <span class="spinner-border spinner-border-sm"></span> Saving… } @else { <gt-icon name="check" [size]="16" /> Save changes }
+    </button>
+  </div>
+</gt-modal>
+
+<!-- Assign Reviewer -->
+<gt-modal [open]="assignOpen()" title="Assign Reviewer" [width]="580" (closed)="assignOpen.set(false)">
+  <form [formGroup]="assignForm" id="assignForm" (ngSubmit)="saveAssign()">
+    <div class="row g-3">
+      <div class="col-md-6">
+        <label class="form-label">Application <span class="text-danger">*</span></label>
+        <gt-searchable-select
+          formControlName="applicationId"
+          [options]="appOptions()"
+          placeholder="Select application…"
+          searchPlaceholder="Search by App # or title…"
+          [invalid]="invalid('assign', 'applicationId')">
+        </gt-searchable-select>
+        @if (invalid('assign', 'applicationId')) { <div class="d-flex align-items-center gap-1 text-danger small mt-1"><gt-icon name="alert-triangle" [size]="13" /> Application is required.</div> }
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Reviewer <span class="text-danger">*</span></label>
+        <gt-searchable-select
+          formControlName="reviewerId"
+          [options]="reviewerOptions()"
+          placeholder="Select reviewer…"
+          searchPlaceholder="Search by reviewer # or name…"
+          [invalid]="invalid('assign', 'reviewerId')">
+        </gt-searchable-select>
+        @if (invalid('assign', 'reviewerId')) { <div class="d-flex align-items-center gap-1 text-danger small mt-1"><gt-icon name="alert-triangle" [size]="13" /> Reviewer is required.</div> }
+      </div>
+      <div class="col-12">
+        <label class="form-label" for="reviewDeadline">Review deadline</label>
+        <div class="input-group gt-input">
+          <span class="input-group-text"><gt-icon name="calendar" [size]="16" /></span>
+          <input type="date" class="form-control py-2" formControlName="reviewDeadline" id="reviewDeadline" />
+        </div>
+      </div>
+    </div>
+  </form>
+  <div footer class="d-flex justify-content-end gap-2">
+    <button class="btn btn-light" (click)="assignOpen.set(false)">Cancel</button>
+    <button class="btn btn-primary px-4 d-inline-flex align-items-center gap-2" form="assignForm" type="submit" [disabled]="savingAssign()">
+      @if (savingAssign()) { <span class="spinner-border spinner-border-sm"></span> Saving… } @else { <gt-icon name="check" [size]="16" /> Assign }
+    </button>
+  </div>
+</gt-modal>
+
+<!-- Record Panel Decision -->
+<gt-modal [open]="panelOpen()" title="Record Panel Decision" [width]="680" (closed)="panelOpen.set(false)">
+  <form [formGroup]="panelForm" id="panelForm" (ngSubmit)="savePanel()">
+    <div class="row g-3">
+      <div class="col-md-6">
+        <label class="form-label">Application <span class="text-danger">*</span></label>
+        <gt-searchable-select
+          formControlName="applicationId"
+          [options]="panelAppOptions()"
+          placeholder="Select application…"
+          searchPlaceholder="Search by App # or title…"
+          [invalid]="invalid('panel', 'applicationId')">
+        </gt-searchable-select>
+        @if (invalid('panel', 'applicationId')) { <div class="d-flex align-items-center gap-1 text-danger small mt-1"><gt-icon name="alert-triangle" [size]="13" /> Application is required.</div> }
+      </div>
+
+      <!-- Submitted reviews (read before deciding) -->
+      <div class="col-12">
+        <div class="border rounded-3 p-3 bg-body-tertiary">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <gt-icon name="scale" [size]="16" class="text-primary" />
+            <span class="fw-semibold text-dark small">Submitted reviews</span>
+          </div>
+          @if (!panelForm.value.applicationId) {
+            <div class="text-secondary small">Select an application to read its submitted reviews.</div>
+          } @else if (loadingReviews()) {
+            <div class="text-secondary small">Loading reviews…</div>
+          } @else if (!panelReviews().length) {
+            <div class="text-secondary small">No submitted reviews yet for this application.</div>
+          } @else {
+            @for (rv of reviewsByAssignment(); track rv.assignmentId) {
+              <div class="mb-2 pb-2 border-bottom">
+                <div class="fw-semibold text-dark small mb-1">
+                  {{ rv.label }}
+                  @if (rv.scores.length && rv.scores[0].overallRecommendation) {
+                    <span class="badge bg-primary-subtle text-primary rounded-pill ms-1">{{ rv.scores[0].overallRecommendation }}</span>
+                  }
+                </div>
+                <div class="d-flex flex-wrap gap-2">
+                  @for (s of rv.scores; track s.id) {
+                    <span class="badge bg-white border text-dark rounded-pill fw-normal">{{ s.criterion }}: <strong>{{ s.score }}</strong>/10</span>
+                  }
+                </div>
+                @if (rv.scores[0].comments) { <div class="text-secondary small mt-1">"{{ rv.scores[0].comments }}"</div> }
+              </div>
+            }
+          }
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <label class="form-label" for="panelDate">Panel date</label>
+        <div class="input-group gt-input">
+          <span class="input-group-text"><gt-icon name="calendar" [size]="16" /></span>
+          <input type="date" class="form-control py-2" formControlName="panelDate" id="panelDate" />
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <label class="form-label" for="consensusScore">Consensus score</label>
+        <div class="input-group gt-input">
+          <span class="input-group-text"><gt-icon name="scale" [size]="16" /></span>
+          <input type="number" class="form-control py-2" formControlName="consensusScore" id="consensusScore" placeholder="e.g. 8.5" />
+        </div>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label" for="awardDecision">Award decision <span class="text-danger">*</span></label>
+        <div class="input-group gt-input" [class.is-invalid]="invalid('panel', 'awardDecision')">
+          <span class="input-group-text"><gt-icon name="award" [size]="16" /></span>
+          <select class="form-select" formControlName="awardDecision" id="awardDecision" [class.is-invalid]="invalid('panel', 'awardDecision')">
+            <option value="FULL_AWARD">Full Award</option>
+            <option value="REDUCED_AWARD">Reduced Award</option>
+            <option value="RESERVE_LIST">Reserve List</option>
+            <option value="REJECTED">Rejected</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="col-12">
+        <label class="form-label" for="panelAwardedAmount">Awarded amount</label>
+        <div class="input-group gt-input">
+          <span class="input-group-text">₹</span>
+          <input type="number" class="form-control py-2" formControlName="awardedAmount" id="panelAwardedAmount" placeholder="e.g. 500000" min="0" />
+        </div>
+      </div>
+
+      @if (isAwardDecision(panelForm.value.awardDecision)) {
+        <div class="col-12">
+          <label class="form-label">Assign finance officer <span class="text-danger">*</span></label>
+          <gt-searchable-select
+            formControlName="financeOfficerId"
+            [options]="financeOfficerOptions()"
+            placeholder="Select finance officer…"
+            searchPlaceholder="Search finance officers…">
+          </gt-searchable-select>
+          <div class="form-text">Only Finance Officers are listed. They'll be notified and will handle disbursement.</div>
+        </div>
+      }
+
+      <div class="col-12">
+        <label class="form-label" for="conditionsAttached">Conditions attached</label>
+        <textarea class="form-control" formControlName="conditionsAttached" id="conditionsAttached" rows="3" placeholder="Any conditions on the award…" style="border-radius:10px;"></textarea>
+      </div>
+    </div>
+  </form>
+  <div footer class="d-flex justify-content-end gap-2">
+    <button class="btn btn-light" (click)="panelOpen.set(false)">Cancel</button>
+    <button class="btn btn-primary px-4 d-inline-flex align-items-center gap-2" form="panelForm" type="submit" [disabled]="savingPanel()">
+      @if (savingPanel()) { <span class="spinner-border spinner-border-sm"></span> Saving… } @else { <gt-icon name="check" [size]="16" /> Record decision }
+    </button>
+  </div>
+</gt-modal>

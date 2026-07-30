@@ -1,0 +1,11 @@
+# Local-development-only shared secrets. The JWT secret MUST match every other service.
+granttrack:
+  security:
+    jwt:
+      secret: Y3JhbnRUcmFja1N1cGVyU2VjcmV0S2V5Rm9ySldUU2lnbmluZzEyMzQ1Njc4OTA=
+  internal:
+    token: gt-internal-dev-token
+
+logging:
+  level:
+    com.granttrack: DEBUG

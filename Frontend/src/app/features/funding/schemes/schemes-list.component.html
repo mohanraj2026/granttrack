@@ -1,0 +1,232 @@
+<gt-funding-tabs />
+
+<gt-page-header title="Funding Schemes" subtitle="Configure the grant funding programmes sponsors offer.">
+  <button class="btn btn-primary d-inline-flex align-items-center gap-2" (click)="openCreate()"><gt-icon name="plus" [size]="16" /> New scheme</button>
+</gt-page-header>
+
+<div class="card border-0 shadow-sm rounded-4">
+  <div class="card-header bg-white border-0 pt-3 pb-0 px-4">
+    <gt-search-filter-bar searchPlaceholder="Search schemes…" [filters]="statusFilter" (change)="onFilter($event)" />
+  </div>
+
+  <div class="card-body p-0">
+    <gt-data-table
+      [columns]="columns"
+      [rows]="rows()"
+      [loading]="loading()"
+      [sortField]="(query().sort || '').split(',')[0]"
+      [sortDir]="$any((query().sort || '').split(',')[1] || 'asc')"
+      (sortChange)="onSort($event)"
+      [rowActions]="actions"
+      emptyTitle="No funding schemes"
+      emptySubtitle="Create your first scheme to start opening grant calls.">
+      <ng-template #actions let-row>
+        <gt-dropdown-menu>
+          <button class="dropdown-item py-2" (click)="openEdit(row)">
+            <gt-icon name="edit" [size]="16" class="me-2 text-secondary" /> Edit
+          </button>
+          <button class="dropdown-item py-2 text-danger" (click)="remove(row)">
+            <gt-icon name="trash-2" [size]="16" class="me-2 text-danger" /> Delete
+          </button>
+        </gt-dropdown-menu>
+      </ng-template>
+    </gt-data-table>
+  </div>
+
+  <div class="card-footer bg-white border-top px-4 py-3">
+    <gt-paginator
+      [page]="query().page || 0"
+      [size]="query().size || 20"
+      [totalElements]="total()"
+      [totalPages]="totalPages()"
+      (pageChange)="onPage($event)"
+      (sizeChange)="onSize($event)" />
+  </div>
+</div>
+
+<gt-modal [open]="modalOpen()" [title]="modalTitle()" [width]="760" (closed)="modalOpen.set(false)">
+  <form [formGroup]="form" id="schemeForm" (ngSubmit)="save()">
+    <!-- Section: Scheme details -->
+    <section class="border rounded-3 p-3 p-md-4 mb-3">
+      <div class="d-flex align-items-center gap-2 mb-3">
+        <span class="d-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary rounded-3" style="width:34px;height:34px;"><gt-icon name="wallet" [size]="17" /></span>
+        <div><div class="fw-semibold text-dark lh-1">Scheme details</div><div class="text-secondary" style="font-size:.8rem;">Identity, sponsor and research focus.</div></div>
+      </div>
+
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label" for="schemeNameInput">Scheme name <span class="text-danger">*</span></label>
+          <div class="input-group gt-input" [class.is-invalid]="invalid('schemeName')">
+            <span class="input-group-text"><gt-icon name="file-text" [size]="16" /></span>
+            <input class="form-control py-2" formControlName="schemeName" id="schemeNameInput" [class.is-invalid]="invalid('schemeName')" placeholder="e.g. Early Career Innovation Grant" />
+          </div>
+          @if (invalid('schemeName')) { <div class="d-flex align-items-center gap-1 text-danger small mt-1"><gt-icon name="alert-triangle" [size]="13" /> Scheme name is required.</div> }
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label" for="sponsorInput">Sponsor <span class="text-danger">*</span></label>
+          <div class="input-group gt-input" [class.is-invalid]="invalid('sponsorId')">
+            <span class="input-group-text"><gt-icon name="landmark" [size]="16" /></span>
+            <select class="form-select" formControlName="sponsorId" id="sponsorInput" [class.is-invalid]="invalid('sponsorId')">
+              <option [ngValue]="null" disabled>Select sponsor…</option>
+              @for (s of sponsors(); track s.id) { <option [ngValue]="s.id">{{ s.name }}</option> }
+            </select>
+          </div>
+          @if (invalid('sponsorId')) { <div class="d-flex align-items-center gap-1 text-danger small mt-1"><gt-icon name="alert-triangle" [size]="13" /> Sponsor is required.</div> }
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label" for="categoryInput">Category <span class="text-danger">*</span></label>
+          <div class="input-group gt-input" [class.is-invalid]="invalid('category')">
+            <span class="input-group-text"><gt-icon name="layers" [size]="16" /></span>
+            <select class="form-select" formControlName="category" id="categoryInput" [class.is-invalid]="invalid('category')">
+              <option value="" disabled>Select category…</option>
+              @for (c of categories; track c) { <option [value]="c">{{ c }}</option> }
+            </select>
+          </div>
+          @if (form.get('category')?.value === 'Others') {
+            <input class="form-control mt-2" formControlName="categoryOther" placeholder="Specify category" style="border-radius:10px;" />
+          }
+          @if (invalid('category')) { <div class="d-flex align-items-center gap-1 text-danger small mt-1"><gt-icon name="alert-triangle" [size]="13" /> Category is required.</div> }
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label" for="researchAreaInput">Research area <span class="text-danger">*</span></label>
+          <div class="input-group gt-input" [class.is-invalid]="invalid('researchArea')">
+            <span class="input-group-text"><gt-icon name="flask" [size]="16" /></span>
+            <select class="form-select" formControlName="researchArea" id="researchAreaInput" [class.is-invalid]="invalid('researchArea')">
+              <option value="" disabled>Select area…</option>
+              @for (a of researchAreas; track a) { <option [value]="a">{{ a }}</option> }
+            </select>
+          </div>
+          @if (form.get('researchArea')?.value === 'Others') {
+            <input class="form-control mt-2" formControlName="researchAreaOther" placeholder="Specify research area" style="border-radius:10px;" />
+          }
+          @if (invalid('researchArea')) { <div class="d-flex align-items-center gap-1 text-danger small mt-1"><gt-icon name="alert-triangle" [size]="13" /> Research area is required.</div> }
+        </div>
+      </div>
+    </section>
+
+    <!-- Section: Award & timeline -->
+    <section class="border rounded-3 p-3 p-md-4 mb-3">
+      <div class="d-flex align-items-center gap-2 mb-3">
+        <span class="d-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary rounded-3" style="width:34px;height:34px;"><gt-icon name="dollar" [size]="17" /></span>
+        <div><div class="fw-semibold text-dark lh-1">Award &amp; timeline</div><div class="text-secondary" style="font-size:.8rem;">Grant size and the scheme's active window.</div></div>
+      </div>
+
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label" for="minAwardInput">Minimum award <span class="text-danger">*</span></label>
+          <div class="input-group gt-input" [class.is-invalid]="invalid('minAwardAmount')">
+            <span class="input-group-text">₹</span>
+            <input type="number" class="form-control py-2" formControlName="minAwardAmount" id="minAwardInput" [class.is-invalid]="invalid('minAwardAmount')" placeholder="e.g. 50000" min="0" />
+          </div>
+          <div class="form-text">Smallest grant a successful applicant can receive.</div>
+          @if (invalid('minAwardAmount')) { <div class="d-flex align-items-center gap-1 text-danger small mt-1"><gt-icon name="alert-triangle" [size]="13" /> Minimum award is required.</div> }
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label" for="maxAwardInput">Award ceiling (up to) <span class="text-danger">*</span></label>
+          <div class="input-group gt-input" [class.is-invalid]="invalid('maxAwardAmount')">
+            <span class="input-group-text"><gt-icon name="trending-up" [size]="16" /></span>
+            <select class="form-select" formControlName="maxAwardAmount" id="maxAwardInput" [class.is-invalid]="invalid('maxAwardAmount')">
+              <option [ngValue]="null" disabled>Select maximum award…</option>
+              @for (c of awardCeilings; track c) { <option [ngValue]="c">Up to {{ c | currency:'INR':'symbol':'1.0-0' }}</option> }
+              @if (form.value.maxAwardAmount && !awardCeilings.includes(form.value.maxAwardAmount)) {
+                <option [ngValue]="form.value.maxAwardAmount">Up to {{ form.value.maxAwardAmount | currency:'INR':'symbol':'1.0-0' }}</option>
+              }
+            </select>
+          </div>
+          <div class="form-text">Maximum grant available under this scheme.</div>
+          @if (invalid('maxAwardAmount')) { <div class="d-flex align-items-center gap-1 text-danger small mt-1"><gt-icon name="alert-triangle" [size]="13" /> Award ceiling is required.</div> }
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label" for="durationInput">Funding duration (months)</label>
+          <div class="input-group gt-input">
+            <span class="input-group-text"><gt-icon name="calendar" [size]="16" /></span>
+            <input type="number" class="form-control py-2" formControlName="fundingDurationMonths" id="durationInput" placeholder="e.g. 24" min="0" />
+          </div>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label" for="fromDateInput">Open from</label>
+          <div class="input-group gt-input">
+            <span class="input-group-text"><gt-icon name="calendar" [size]="16" /></span>
+            <input type="date" class="form-control py-2" formControlName="fromDate" id="fromDateInput" />
+          </div>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label" for="toDateInput">Open to</label>
+          <div class="input-group gt-input">
+            <span class="input-group-text"><gt-icon name="calendar" [size]="16" /></span>
+            <input type="date" class="form-control py-2" formControlName="toDate" id="toDateInput" />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section: Eligibility & status -->
+    <section class="border rounded-3 p-3 p-md-4 mb-3">
+      <div class="d-flex align-items-center gap-2 mb-3">
+        <span class="d-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary rounded-3" style="width:34px;height:34px;"><gt-icon name="users" [size]="17" /></span>
+        <div><div class="fw-semibold text-dark lh-1">Eligibility &amp; status</div><div class="text-secondary" style="font-size:.8rem;">Who can apply, and whether the scheme is live.</div></div>
+      </div>
+
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label" for="eligibleInput">Eligible applicants <span class="text-danger">*</span></label>
+          <div class="input-group gt-input" [class.is-invalid]="invalid('eligibleApplicants')">
+            <span class="input-group-text"><gt-icon name="users" [size]="16" /></span>
+            <select class="form-select" formControlName="eligibleApplicants" id="eligibleInput" [class.is-invalid]="invalid('eligibleApplicants')">
+              <option value="" disabled>Select applicants…</option>
+              <option value="Any">Any</option>
+              @for (a of applicantTypes; track a) { <option [value]="a">{{ a }}</option> }
+            </select>
+          </div>
+          @if (form.get('eligibleApplicants')?.value === 'Others') {
+            <input class="form-control mt-2" formControlName="eligibleApplicantsOther" placeholder="Specify eligible applicants" style="border-radius:10px;" />
+          }
+          @if (invalid('eligibleApplicants')) { <div class="d-flex align-items-center gap-1 text-danger small mt-1"><gt-icon name="alert-triangle" [size]="13" /> Eligible applicants is required.</div> }
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label" for="statusInput">Status</label>
+          <div class="input-group gt-input">
+            <span class="input-group-text"><gt-icon name="check-circle" [size]="16" /></span>
+            <select class="form-select" formControlName="status" id="statusInput">
+              <option value="ACTIVE">Active</option>
+              <option value="CLOSED">Closed</option>
+              <option value="SUSPENDED">Suspended</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section: Description & document -->
+    <section class="border rounded-3 p-3 p-md-4 mb-1">
+      <div class="d-flex align-items-center gap-2 mb-3">
+        <span class="d-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary rounded-3" style="width:34px;height:34px;"><gt-icon name="clipboard" [size]="17" /></span>
+        <div><div class="fw-semibold text-dark lh-1">Description &amp; document</div><div class="text-secondary" style="font-size:.8rem;">A summary and an optional scheme brochure.</div></div>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label" for="descInput">Description <span class="text-danger">*</span></label>
+        <textarea class="form-control" formControlName="description" id="descInput" rows="3" placeholder="Purpose, scope and objectives of this scheme…" [class.is-invalid]="invalid('description')" style="border-radius:10px;"></textarea>
+        @if (invalid('description')) { <div class="d-flex align-items-center gap-1 text-danger small mt-1"><gt-icon name="alert-triangle" [size]="13" /> Description is required.</div> }
+      </div>
+
+      <div>
+        <label class="form-label" for="schemeDocInput">Scheme document <span class="text-muted fw-normal">(PDF / Word / image)</span></label>
+        <input type="file" class="form-control" id="schemeDocInput" (change)="onFileSelected($event)" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" />
+      </div>
+    </section>
+  </form>
+
+  <div footer class="d-flex gap-2 justify-content-end">
+    <button class="btn btn-light" (click)="modalOpen.set(false)">Cancel</button>
+    <button class="btn btn-primary px-4 d-inline-flex align-items-center gap-2" form="schemeForm" type="submit" [disabled]="saving()">
+      @if (saving()) { <span class="spinner-border spinner-border-sm"></span> Saving… } @else { <gt-icon name="check" [size]="16" /> Save scheme }
+    </button>
+  </div>
+</gt-modal>

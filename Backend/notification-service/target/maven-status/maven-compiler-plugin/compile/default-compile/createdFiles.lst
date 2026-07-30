@@ -1,0 +1,16 @@
+com\granttrack\notification\dto\response\NotificationResponse.class
+com\granttrack\notification\controller\NotificationController.class
+com\granttrack\notification\dto\response\NotificationResponse$NotificationResponseBuilder.class
+com\granttrack\notification\entity\NotificationStatus.class
+com\granttrack\notification\mapper\NotificationMapperImpl.class
+com\granttrack\notification\service\impl\NotificationServiceImpl.class
+com\granttrack\notification\entity\Notification.class
+com\granttrack\notification\repository\NotificationRepository.class
+com\granttrack\notification\service\NotificationService.class
+com\granttrack\notification\entity\Notification$NotificationBuilder.class
+com\granttrack\notification\entity\NotificationCategory.class
+com\granttrack\notification\dto\request\NotificationRequest.class
+com\granttrack\NotificationServiceApplication.class
+com\granttrack\notification\config\NotificationSecurityConfig.class
+com\granttrack\notification\mapper\NotificationMapper.class
+com\granttrack\notification\controller\InternalNotificationController.class

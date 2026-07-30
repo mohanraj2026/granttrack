@@ -1,0 +1,190 @@
+<gt-page-header title="Grants Master Dashboard" subtitle="Awarded grants are the operational anchor for disbursements, progress and outputs.">
+  <button *gtHasRole="[Role.GRANT_ADMIN, Role.ADMIN]" class="btn btn-primary d-inline-flex align-items-center gap-2" (click)="openCreate()"><gt-icon name="plus" [size]="16" /> New award</button>
+</gt-page-header>
+
+<div class="card border-0 shadow-sm rounded-4 mb-4">
+  <div class="card-header bg-white border-0 pt-3 pb-0 px-4">
+    <gt-search-filter-bar
+      searchPlaceholder="Search awards…"
+      [filters]="statusFilter"
+      (change)="onFilter($event)" />
+  </div>
+
+  <div class="card-body p-0">
+    <gt-data-table
+      [columns]="columns"
+      [rows]="rows()"
+      [loading]="loading()"
+      [sortField]="(query().sort || '').split(',')[0]"
+      [sortDir]="$any((query().sort || '').split(',')[1] || 'asc')"
+      (sortChange)="onSort($event)"
+      [rowActions]="actions"
+      emptyTitle="No awards"
+      emptySubtitle="Create an award once an application is funded.">
+      <ng-template #actions let-row>
+        <gt-dropdown-menu>
+          <a class="dropdown-item py-2" [routerLink]="['/awards', row.id]">
+            <gt-icon name="eye" [size]="16" class="me-2 text-secondary" /> View
+          </a>
+          <a class="dropdown-item py-2" [routerLink]="['/applications', row.applicationId]">
+            <gt-icon name="file-text" [size]="16" class="me-2 text-secondary" /> View application
+          </a>
+          @if (canFinanceReview(row)) {
+            <button class="dropdown-item py-2" (click)="acceptAward(row)">
+              <gt-icon name="check-circle" [size]="16" class="me-2 text-success" /> Accept (finance)
+            </button>
+            <button class="dropdown-item py-2 text-danger" (click)="openRejectAward(row)">
+              <gt-icon name="x-circle" [size]="16" class="me-2 text-danger" /> Reject (finance)
+            </button>
+          }
+          <ng-container *gtHasRole="[Role.GRANT_ADMIN, Role.ADMIN]">
+            <button class="dropdown-item py-2" (click)="approve(row)">
+              <gt-icon name="check-circle" [size]="16" class="me-2 text-success" /> Approve
+            </button>
+            <button class="dropdown-item py-2" (click)="openTerms(row)">
+              <gt-icon name="edit" [size]="16" class="me-2 text-warning" /> Edit Terms
+            </button>
+            @if (row.status === 'ACTIVE') {
+              <button class="dropdown-item py-2" (click)="changeStatus(row, 'SUSPENDED')">
+                <gt-icon name="pause-circle" [size]="16" class="me-2 text-secondary" /> Suspend
+              </button>
+              <button class="dropdown-item py-2" (click)="changeStatus(row, 'COMPLETED')">
+                <gt-icon name="check-square" [size]="16" class="me-2 text-primary" /> Complete
+              </button>
+              <button class="dropdown-item py-2 text-danger" (click)="changeStatus(row, 'TERMINATED')">
+                <gt-icon name="x-circle" [size]="16" class="me-2 text-danger" /> Terminate
+              </button>
+            }
+            @if (row.status === 'SUSPENDED') {
+              <button class="dropdown-item py-2" (click)="changeStatus(row, 'ACTIVE')">
+                <gt-icon name="play-circle" [size]="16" class="me-2 text-success" /> Activate
+              </button>
+            }
+          </ng-container>
+        </gt-dropdown-menu>
+      </ng-template>
+    </gt-data-table>
+  </div>
+
+  <div class="card-footer bg-white border-top px-4 py-3">
+    <gt-paginator
+      [page]="query().page || 0"
+      [size]="query().size || 20"
+      [totalElements]="total()"
+      [totalPages]="totalPages()"
+      (pageChange)="onPage($event)"
+      (sizeChange)="onSize($event)" />
+  </div>
+</div>
+
+<gt-modal [open]="createOpen()" title="Create Award" [width]="640" (closed)="createOpen.set(false)">
+  <form [formGroup]="form" id="awardForm" (ngSubmit)="save()">
+    <div class="row g-3">
+      <div class="col-md-6">
+        <label class="form-label">Application <span class="text-danger">*</span></label>
+        <gt-searchable-select
+          formControlName="applicationId"
+          [options]="appOptions()"
+          placeholder="Select awarded application…"
+          searchPlaceholder="Search by App # or title…"
+          [invalid]="invalid('applicationId')">
+        </gt-searchable-select>
+        @if (invalid('applicationId')) { <div class="d-flex align-items-center gap-1 text-danger small mt-1"><gt-icon name="alert-triangle" [size]="13" /> Application is required.</div> }
+      </div>
+      <div class="col-md-6">
+        <label class="form-label" for="createAwardedAmount">Awarded amount <span class="text-danger">*</span></label>
+        <div class="input-group gt-input" [class.is-invalid]="invalid('awardedAmount')">
+          <span class="input-group-text">₹</span>
+          <input type="number" class="form-control py-2" formControlName="awardedAmount" id="createAwardedAmount" [class.is-invalid]="invalid('awardedAmount')" placeholder="e.g. 500000" min="0" />
+        </div>
+        @if (invalid('awardedAmount')) { <div class="d-flex align-items-center gap-1 text-danger small mt-1"><gt-icon name="alert-triangle" [size]="13" /> Awarded amount is required.</div> }
+      </div>
+      <div class="col-md-6">
+        <label class="form-label" for="createStartDate">Start date</label>
+        <div class="input-group gt-input">
+          <span class="input-group-text"><gt-icon name="calendar" [size]="16" /></span>
+          <input type="date" class="form-control py-2" formControlName="startDate" id="createStartDate" />
+        </div>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label" for="createEndDate">End date</label>
+        <div class="input-group gt-input">
+          <span class="input-group-text"><gt-icon name="calendar" [size]="16" /></span>
+          <input type="date" class="form-control py-2" formControlName="endDate" id="createEndDate" />
+        </div>
+      </div>
+      <div class="col-12">
+        <label class="form-label" for="createConditions">Conditions reference</label>
+        <div class="input-group gt-input">
+          <span class="input-group-text"><gt-icon name="file-text" [size]="16" /></span>
+          <input class="form-control py-2" formControlName="conditionsRef" id="createConditions" placeholder="e.g. Panel decision ref" />
+        </div>
+      </div>
+    </div>
+  </form>
+  <div footer class="d-flex justify-content-end gap-2">
+    <button class="btn btn-light" (click)="createOpen.set(false)">Cancel</button>
+    <button class="btn btn-primary px-4 d-inline-flex align-items-center gap-2" form="awardForm" type="submit" [disabled]="saving()">
+      @if (saving()) { <span class="spinner-border spinner-border-sm"></span> Saving… } @else { <gt-icon name="check" [size]="16" /> Save award }
+    </button>
+  </div>
+</gt-modal>
+
+<gt-modal [open]="termsOpen()" title="Edit Award Terms" [width]="640" (closed)="termsOpen.set(false)">
+  <form [formGroup]="termsForm" id="termsForm" (ngSubmit)="saveTerms()">
+    <div class="row g-3">
+      <div class="col-12">
+        <label class="form-label" for="termsAwardedAmount">Awarded amount <span class="text-danger">*</span></label>
+        <div class="input-group gt-input" [class.is-invalid]="termsInvalid('awardedAmount')">
+          <span class="input-group-text">₹</span>
+          <input type="number" class="form-control py-2" formControlName="awardedAmount" id="termsAwardedAmount" [class.is-invalid]="termsInvalid('awardedAmount')" placeholder="e.g. 500000" min="0" />
+        </div>
+        @if (termsInvalid('awardedAmount')) { <div class="d-flex align-items-center gap-1 text-danger small mt-1"><gt-icon name="alert-triangle" [size]="13" /> Awarded amount is required.</div> }
+      </div>
+      <div class="col-md-6">
+        <label class="form-label" for="termsStartDate">Start date</label>
+        <div class="input-group gt-input">
+          <span class="input-group-text"><gt-icon name="calendar" [size]="16" /></span>
+          <input type="date" class="form-control py-2" formControlName="startDate" id="termsStartDate" />
+        </div>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label" for="termsEndDate">End date</label>
+        <div class="input-group gt-input">
+          <span class="input-group-text"><gt-icon name="calendar" [size]="16" /></span>
+          <input type="date" class="form-control py-2" formControlName="endDate" id="termsEndDate" />
+        </div>
+      </div>
+      <div class="col-12">
+        <label class="form-label" for="termsConditions">Conditions reference</label>
+        <div class="input-group gt-input">
+          <span class="input-group-text"><gt-icon name="file-text" [size]="16" /></span>
+          <input class="form-control py-2" formControlName="conditionsRef" id="termsConditions" placeholder="e.g. Panel decision ref" />
+        </div>
+      </div>
+    </div>
+  </form>
+  <div footer class="d-flex justify-content-end gap-2">
+    <button class="btn btn-light" (click)="termsOpen.set(false)">Cancel</button>
+    <button class="btn btn-primary px-4 d-inline-flex align-items-center gap-2" form="termsForm" type="submit" [disabled]="saving()">
+      @if (saving()) { <span class="spinner-border spinner-border-sm"></span> Saving… } @else { <gt-icon name="check" [size]="16" /> Save terms }
+    </button>
+  </div>
+</gt-modal>
+
+<!-- Finance: reject an award (reason required) -->
+<gt-modal [open]="financeRejectOpen()" title="Reject Award" [width]="520" (closed)="financeRejectOpen.set(false)">
+  <p class="text-secondary small mb-3">
+    Rejecting returns the award to the grant administrator with your reason. Milestones cannot be set up
+    for a rejected award.
+  </p>
+  <label class="form-label" for="finRejectReason">Reason <span class="text-danger">*</span></label>
+  <textarea id="finRejectReason" class="form-control" rows="3" placeholder="Explain why this award is being rejected…"
+            style="border-radius:10px;" [value]="financeRejectReason()" (input)="financeRejectReason.set($any($event.target).value)"></textarea>
+  <div footer class="d-flex justify-content-end gap-2">
+    <button class="btn btn-light" (click)="financeRejectOpen.set(false)">Cancel</button>
+    <button class="btn btn-danger px-4 d-inline-flex align-items-center gap-2" (click)="confirmRejectAward()" [disabled]="saving() || !financeRejectReason().trim()">
+      @if (saving()) { <span class="spinner-border spinner-border-sm"></span> Rejecting… } @else { <gt-icon name="x-circle" [size]="16" /> Reject award }
+    </button>
+  </div>
+</gt-modal>

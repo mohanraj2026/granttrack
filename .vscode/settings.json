@@ -1,0 +1,8 @@
+{
+  "java.configuration.updateBuildConfiguration": "automatic",
+  "java.import.maven.enabled": true,
+  "java.compile.nullAnalysis.mode": "disabled",
+  "java.maven.downloadSources": true,
+  "java.import.generatesMetadataFilesAtProjectRoot": false,
+  "java.jdt.ls.lombokSupport.enabled": true
+}

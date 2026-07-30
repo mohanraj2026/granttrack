@@ -1,0 +1,89 @@
+<div class="row g-0 min-vh-100">
+  <!-- ============ Brand rail ============ -->
+  <aside class="col-lg-5 col-xl-4 auth-rail d-none d-lg-flex flex-column justify-content-between p-5 text-white">
+    <a routerLink="/" class="d-inline-flex align-items-center gap-2 text-white text-decoration-none fw-bold fs-5">
+      <span class="auth-rail-mark"><gt-icon name="diamond" [size]="22" /></span> GrantTrack
+    </a>
+
+    <div class="py-4">
+      <span class="d-inline-flex align-items-center gap-2 text-uppercase fw-semibold text-mint mb-3" style="font-size:.72rem; letter-spacing:.16em;">
+        <gt-icon name="sparkles" [size]="14" /> Research Grant Platform
+      </span>
+      <h1 class="fw-bold lh-sm mb-3 text-white" style="font-size:clamp(1.9rem,2.6vw,2.6rem); letter-spacing:-.02em;">
+        Manage the entire research-grant lifecycle in one place.
+      </h1>
+      <p class="text-white-50 mb-0 lh-base" style="max-width:34rem; font-size:1.02rem;">
+        From funding calls to published outputs — organised, auditable and on schedule.
+      </p>
+    </div>
+
+    <div class="d-flex align-items-center gap-2 text-white-50" style="font-size:.82rem;">
+      <span class="text-mint"><gt-icon name="shield-check" [size]="16" /></span> Secure, role-based access for research teams.
+    </div>
+  </aside>
+
+  <!-- ============ Form ============ -->
+  <main class="col d-flex align-items-center justify-content-center p-4 p-lg-5 bg-body">
+    <div class="w-100" style="max-width:26rem;">
+      <a routerLink="/" class="d-lg-none d-inline-flex align-items-center gap-2 fw-bold text-decoration-none mb-4 text-dark">
+        <span class="auth-rail-mark sm"><gt-icon name="diamond" [size]="18" /></span> GrantTrack
+      </a>
+
+      <h1 class="fw-bold mb-1 text-dark">Sign in</h1>
+      <p class="text-secondary mb-4">Welcome back. Access your GrantTrack workspace.</p>
+
+      <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+        <!-- Email -->
+        <div class="mb-3">
+          <label class="form-label" for="emailInput">Email address <span class="text-danger">*</span></label>
+          <div class="input-group gt-input" [class.is-invalid]="invalid('email')">
+            <span class="input-group-text"><gt-icon name="mail" [size]="17" /></span>
+            <input type="email" id="emailInput" class="form-control py-2" formControlName="email"
+                   [class.is-invalid]="invalid('email')" placeholder="you@institution.edu" autocomplete="username" />
+          </div>
+          @if (invalid('email')) { <div class="d-flex align-items-center gap-1 text-danger small mt-1"><gt-icon name="alert-triangle" [size]="13" /> A valid email is required.</div> }
+        </div>
+
+        <!-- Password -->
+        <div class="mb-2">
+          <label class="form-label" for="passwordInput">Password <span class="text-danger">*</span></label>
+          <div class="input-group gt-input" [class.is-invalid]="invalid('password')">
+            <span class="input-group-text"><gt-icon name="lock" [size]="17" /></span>
+            <input #pw type="password" id="passwordInput" class="form-control py-2" formControlName="password"
+                   [class.is-invalid]="invalid('password')" placeholder="Enter your password" autocomplete="current-password" />
+            <button type="button" class="gt-eye" tabindex="-1"
+                    (click)="pw.type = pw.type === 'password' ? 'text' : 'password'"
+                    [attr.aria-label]="pw.type === 'password' ? 'Show password' : 'Hide password'">
+              <gt-icon name="eye" [size]="17" />
+            </button>
+          </div>
+          @if (invalid('password')) { <div class="d-flex align-items-center gap-1 text-danger small mt-1"><gt-icon name="alert-triangle" [size]="13" /> Password is required.</div> }
+        </div>
+
+        <div class="d-flex justify-content-end mb-4">
+          <a routerLink="/forgot-password" class="text-decoration-none fw-semibold small">Forgot password?</a>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100 py-2 d-flex align-items-center justify-content-center gap-1" [disabled]="submitting()">
+          @if (submitting()) {
+            <span class="spinner-border spinner-border-sm" aria-hidden="true"></span> Signing in…
+          } @else {
+            Sign in <gt-icon name="chevron-right" [size]="17" />
+          }
+        </button>
+      </form>
+
+      <div class="d-flex align-items-center gap-3 my-4 text-secondary small">
+        <hr class="flex-grow-1 my-0" /> New to GrantTrack? <hr class="flex-grow-1 my-0" />
+      </div>
+
+      <a routerLink="/register" class="btn btn-outline-secondary w-100 py-2 d-flex align-items-center justify-content-center gap-2">
+        <gt-icon name="user" [size]="17" /> Create a researcher account
+      </a>
+
+      <p class="text-center text-secondary mt-4 mb-0 small">
+        Staff member? <a routerLink="/staff-login" class="text-decoration-none fw-semibold">Sign in to the staff portal</a>
+      </p>
+    </div>
+  </main>
+</div>

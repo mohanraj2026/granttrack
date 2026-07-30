@@ -1,0 +1,326 @@
+/* ============================================================
+   GrantTrack — "Meridian" design system
+   Clean, flat, professional UI. Bootstrap 5.3 compiled from
+   source so the brand palette drives every component.
+   ============================================================ */
+
+@import "bootstrap/scss/functions";
+
+/* ---- Brand palette (Bootstrap variable overrides) ----
+   GrantTrack enterprise palette: Deep Navy primary, Slate secondary,
+   Emerald accent, status blue/green/amber/red. No bright gradients. */
+$primary:   #12406e; // deep navy (interactive)
+$secondary: #475569; // slate 600
+$success:   #059669; // emerald 600 (also brand accent)
+$info:      #0284c7; // status blue (distinct from navy primary)
+$warning:   #d97706; // amber 600
+$danger:    #dc2626; // red 600
+$light:     #f4f6f9; // light gray surface
+$dark:      #0a2540; // navy 900
+
+$body-bg:              #f4f6f9;
+$body-color:           #1e293b;
+$body-secondary-color: #64748b;
+
+$font-family-sans-serif: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+$headings-font-weight: 700;
+$headings-color: #0a2540;
+$font-size-base: 0.9rem;
+
+$border-radius:    0.5rem;
+$border-radius-sm: 0.375rem;
+$border-radius-lg: 0.75rem;
+$border-radius-xl: 1rem;
+$border-color:     #e2e8f0;
+
+$link-decoration:       none;
+$link-hover-decoration: underline;
+
+$box-shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
+$box-shadow:    0 4px 16px rgba(15, 23, 42, 0.08);
+$box-shadow-lg: 0 14px 38px rgba(15, 23, 42, 0.14);
+
+$card-border-color:  #e9eef5;
+$card-border-radius: 0.75rem;
+$card-cap-bg:        #ffffff;
+
+$input-btn-focus-color-opacity: 0.18;
+$input-border-color:            #cbd5e1;
+$input-focus-border-color:      #7ea3c9;
+
+$table-cell-padding-y: 0.8rem;
+$table-cell-padding-x: 1rem;
+$table-th-font-weight: 600;
+
+$modal-content-border-color: #e9eef5;
+$modal-content-border-radius: 0.85rem;
+$modal-backdrop-opacity: 0.4;
+
+$dropdown-border-color: #e9eef5;
+$dropdown-border-radius: 0.6rem;
+$dropdown-box-shadow: $box-shadow;
+
+@import "bootstrap/scss/bootstrap";
+
+/* ============================================================
+   Design tokens — kept as CSS variables so component .scss
+   files (shell, features) keep working; values refreshed to
+   the flat Meridian look.
+   ============================================================ */
+:root {
+  --gt-primary: #{$primary};
+  --gt-primary-600: #0d3054;   /* navy hover */
+  --gt-primary-700: #0a2540;   /* navy active */
+  --gt-primary-50: #e9f0f7;    /* navy tint */
+  --gt-accent: #059669;        /* emerald accent */
+  --gt-accent-600: #047857;
+  --gt-accent-50: #ecfdf5;
+  --gt-blue: #{$primary};
+  --gt-navy: #0a2540;
+  --gt-navy-2: #0e2f52;
+  --gt-teal: #14b8a6;
+
+  --gt-bg: #{$body-bg};
+  --gt-surface: #ffffff;
+  --gt-surface-2: #f1f5f9;
+  --gt-surface-3: #e2e8f0;
+  --gt-surface-alt: #f8fafc;
+  --gt-gray-100: #f1f5f9;
+  --gt-blue-50: #eef2ff;
+  --gt-border: #e2e8f0;
+  --gt-border-strong: #cbd5e1;
+  --gt-text: #1e293b;
+  --gt-text-muted: #64748b;
+  --gt-text-faint: #94a3b8;
+  --gt-text-light: #94a3b8;
+
+  --gt-success: #{$success}; --gt-success-bg: #dcfce7;
+  --gt-warning: #{$warning}; --gt-warning-bg: #fef3c7;
+  --gt-danger: #{$danger};  --gt-danger-bg: #fee2e2;
+  --gt-error: #{$danger};   --gt-red: #{$danger};
+  --gt-info: #{$info};    --gt-info-bg: #e0f2fe;
+  --gt-neutral: #475569; --gt-neutral-bg: #f1f5f9;
+
+  /* flattened (no glass/gradient) — kept for compatibility */
+  --gt-gradient-primary: linear-gradient(150deg, #12406e, #0a2540);
+  --gt-gradient-teal: linear-gradient(150deg, #059669, #047857);
+  --gt-glass-bg: #ffffff;
+  --gt-glass-border: var(--gt-border);
+  --gt-glass-shadow: var(--gt-shadow-sm);
+  --gt-glass-blur: 0px;
+
+  --gt-radius: 0.75rem;
+  --gt-radius-sm: 0.5rem;
+  --gt-radius-pill: 999px;
+  --gt-shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.05);
+  --gt-shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
+  --gt-shadow: 0 4px 16px rgba(15, 23, 42, 0.08);
+  --gt-shadow-lg: 0 14px 38px rgba(15, 23, 42, 0.14);
+  --gt-ring: 0 0 0 3px rgba(18, 64, 110, 0.20);
+  --gt-font: #{$font-family-sans-serif};
+
+  /* Layout */
+  --gt-sidebar-w: 258px;
+  --gt-sidebar-w-collapsed: 74px;
+  --gt-topbar-h: 62px;
+  --gt-sidebar-bg: #0a2540;
+  --gt-content-max: 1400px;
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  font-family: var(--gt-font);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  letter-spacing: -0.006em;
+}
+
+h1, h2, h3, h4, h5 { letter-spacing: -0.018em; }
+
+/* ---------- Cards: crisp, flat ---------- */
+.card {
+  border: 1px solid #e9eef5;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+.card-pad { padding: 1.35rem 1.5rem; }
+
+/* ---------- Buttons: solid, confident ---------- */
+.btn { font-weight: 600; letter-spacing: -0.01em; }
+.btn-primary { --bs-btn-hover-bg: #0d3054; --bs-btn-active-bg: #0a2540; --bs-btn-hover-border-color: #0d3054; --bs-btn-active-border-color: #0a2540; }
+.btn-ghost {
+  background: transparent; border: 1px solid transparent; color: var(--gt-text-muted);
+}
+.btn-ghost:hover { background: var(--gt-surface-2); color: var(--gt-navy); }
+.btn-soft-primary { background: var(--gt-primary-50); color: var(--gt-primary-600); border: 1px solid transparent; }
+.btn-soft-primary:hover { background: #dbe6f1; color: var(--gt-primary-600); }
+/* Emerald accent CTA */
+.btn-accent { --bs-btn-color: #fff; --bs-btn-bg: var(--gt-accent); --bs-btn-border-color: var(--gt-accent);
+  --bs-btn-hover-color: #fff; --bs-btn-hover-bg: var(--gt-accent-600); --bs-btn-hover-border-color: var(--gt-accent-600);
+  --bs-btn-active-bg: #065f46; --bs-btn-active-border-color: #065f46; --bs-btn-disabled-bg: var(--gt-accent); --bs-btn-disabled-border-color: var(--gt-accent); }
+.text-accent { color: var(--gt-accent) !important; }
+
+/* ---------- Forms ---------- */
+.form-label { font-weight: 600; font-size: 0.82rem; color: #334155; }
+.form-control, .form-select { color: var(--gt-text); }
+.form-control::placeholder { color: var(--gt-text-faint); }
+.input-group-text { background: var(--gt-surface-2); color: var(--gt-text-muted); border-color: var(--gt-border-strong); font-weight: 600; }
+.form-text { color: var(--gt-text-faint); font-size: 0.76rem; }
+
+/* Standard iconized input group — reused across every form in the app.
+   Leading icon + control share one border and one focus ring. */
+.gt-input { --bs-border-radius: 10px; transition: box-shadow .15s ease, border-color .15s ease; }
+.gt-input .input-group-text { background: #fff; border-color: var(--gt-border-strong); border-right: 0; color: var(--gt-text-faint); padding-right: .5rem; }
+.gt-input .form-control { border-left: 0; padding-left: .35rem; }
+.gt-input .form-control::placeholder { color: var(--gt-text-faint); }
+.gt-input:focus-within { box-shadow: var(--gt-ring); }
+.gt-input:focus-within .input-group-text,
+.gt-input:focus-within .form-control,
+.gt-input:focus-within .gt-eye { border-color: var(--gt-primary); }
+.gt-input:focus-within .input-group-text { color: var(--gt-primary); }
+.gt-input .form-control:focus { box-shadow: none; }
+.gt-input .gt-eye { border: 1px solid var(--gt-border-strong); border-left: 0; background: #fff; color: var(--gt-text-faint); width: 3rem; display: grid; place-items: center; cursor: pointer; border-radius: 0 10px 10px 0; transition: color .15s; }
+.gt-input .gt-eye:hover { color: var(--gt-navy); }
+.gt-input.is-invalid .input-group-text,
+.gt-input.is-invalid .form-control,
+.gt-input.is-invalid .gt-eye { border-color: var(--bs-danger); }
+.gt-input .form-control.is-invalid { background-image: none; }
+.gt-input.is-invalid:focus-within { box-shadow: 0 0 0 3px rgba(220, 38, 38, .16); }
+/* <select> support inside .gt-input (funding & other forms) */
+.gt-input .form-select { border-left: 0; padding-left: .35rem; }
+.gt-input:focus-within .form-select { border-color: var(--gt-primary); }
+.gt-input .form-select:focus { box-shadow: none; }
+.gt-input.is-invalid .form-select { border-color: var(--bs-danger); }
+
+/* Card lift-on-hover — reusable interaction (dashboard, list cards, etc.) */
+.gt-hover-lift { transition: transform .2s cubic-bezier(.25,.8,.25,1), box-shadow .2s ease; }
+.gt-hover-lift:hover { transform: translateY(-3px); box-shadow: var(--gt-shadow) !important; }
+
+/* Stepper — reusable for multi-step forms (application wizard, etc.) */
+.gt-step { display: inline-flex; align-items: center; gap: .5rem; padding: .5rem .9rem; border-radius: 999px; border: 1px solid var(--gt-border); background: #fff; color: var(--gt-text-muted); font-size: .85rem; font-weight: 600; cursor: pointer; transition: border-color .15s, color .15s, background .15s; }
+.gt-step:hover { border-color: var(--gt-border-strong); }
+.gt-step .num { width: 22px; height: 22px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: .75rem; background: var(--gt-surface-2); color: var(--gt-text-muted); }
+.gt-step.active { border-color: var(--gt-primary); color: var(--gt-primary); background: var(--gt-primary-50); }
+.gt-step.active .num { background: var(--gt-primary); color: #fff; }
+.gt-step.done { color: var(--gt-navy); border-color: var(--gt-accent); }
+.gt-step.done .num { background: var(--gt-accent); color: #fff; }
+
+/* Horizontal milestone timeline (progress overview) — namespaced to avoid
+   clashing with the vertical Bootstrap-based .timeline in the disbursement scheduler. */
+.gt-timeline { display: flex; gap: 0; overflow-x: auto; padding-bottom: .5rem; }
+.gt-tl-node { position: relative; flex: 1 1 0; min-width: 180px; padding-top: 2.4rem; }
+.gt-tl-node::before { content: ''; position: absolute; top: 1.15rem; left: 0; right: 0; height: 3px; background: var(--gt-border); z-index: 0; }
+.gt-tl-node:first-child::before { left: 50%; }
+.gt-tl-node:last-child::before { right: 50%; }
+.gt-tl-dot { position: absolute; top: 0; left: calc(50% - 17px); z-index: 1; width: 34px; height: 34px; border-radius: 50%; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: .85rem; box-shadow: 0 0 0 4px var(--gt-surface); }
+.gt-tl-card { margin: 0 .5rem; }
+
+/* Auth screens — deep-navy brand rail (the only auth-specific visuals;
+   everything else in the auth templates is plain Bootstrap utilities). */
+.auth-rail { position: relative; overflow: hidden; background: radial-gradient(130% 120% at 12% 8%, #0e2f52 0%, #0a2540 46%, #071b30 100%); }
+.auth-rail::before {
+  content: ''; position: absolute; inset: 0; opacity: .55; pointer-events: none;
+  background-image: linear-gradient(rgba(255,255,255,.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.04) 1px, transparent 1px);
+  background-size: 34px 34px;
+  -webkit-mask-image: radial-gradient(120% 90% at 18% 2%, #000 28%, transparent 74%);
+          mask-image: radial-gradient(120% 90% at 18% 2%, #000 28%, transparent 74%);
+}
+.auth-rail > * { position: relative; z-index: 1; }
+.auth-rail-mark { width: 40px; height: 40px; border-radius: 11px; display: grid; place-items: center; background: linear-gradient(150deg, #14477d, #0a2540); border: 1px solid rgba(255,255,255,.14); color: #6ee7b7; }
+.auth-rail-mark.sm { width: 34px; height: 34px; border-radius: 9px; background: var(--gt-navy); }
+.auth-rail-fi { width: 40px; height: 40px; border-radius: 11px; display: grid; place-items: center; flex-shrink: 0; background: rgba(110,231,183,.10); border: 1px solid rgba(110,231,183,.20); color: #6ee7b7; }
+.text-mint { color: #6ee7b7 !important; }
+
+/* App shell (layout chrome) — the only layout-specific CSS; templates use
+   Bootstrap utilities for everything else. Collapse / mobile-drawer / active
+   indicator can't be expressed with utilities, so they live here globally. */
+.app-shell { display: flex; min-height: 100vh; }
+.app-sidebar {
+  width: var(--gt-sidebar-w); background: var(--gt-sidebar-bg); color: #cbd5e1;
+  display: flex; flex-direction: column; flex-shrink: 0;
+  position: sticky; top: 0; height: 100vh; z-index: 60;
+  transition: width .18s ease; border-right: 1px solid rgba(148,163,184,.08);
+}
+.app-logo { width: 34px; height: 34px; border-radius: 9px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; background: linear-gradient(150deg, #14477d, #0a2540); border: 1px solid rgba(255,255,255,.14); color: #6ee7b7; }
+.app-nav-item { display: flex; align-items: center; gap: .8rem; padding: .62rem .85rem; border-radius: .55rem; color: #94a3b8; font-size: .875rem; font-weight: 500; text-decoration: none; white-space: nowrap; position: relative; transition: background .14s, color .14s; }
+.app-nav-item:hover { background: rgba(148,163,184,.1); color: #fff; }
+.app-nav-item.active { background: rgba(16,185,129,.14); color: #fff; font-weight: 600; }
+.app-nav-item.active gt-icon { color: #6ee7b7; }
+.app-nav-item.active::before { content: ''; position: absolute; left: -.5rem; top: 50%; transform: translateY(-50%); width: 3px; height: 55%; border-radius: 0 3px 3px 0; background: #10b981; }
+
+.app-shell.collapsed .app-sidebar { width: var(--gt-sidebar-w-collapsed); }
+.app-shell.collapsed .nav-label,
+.app-shell.collapsed .brand-name,
+.app-shell.collapsed .nav-section-label { display: none !important; }
+.app-shell.collapsed .app-nav-item { justify-content: center; }
+.app-shell.collapsed .side-foot { display: none; }
+
+.app-topbar { position: sticky; top: 0; z-index: 50; height: var(--gt-topbar-h); background: rgba(255,255,255,.85); backdrop-filter: saturate(180%) blur(8px); border-bottom: 1px solid var(--gt-border); }
+.app-avatar { width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: .8rem; color: #fff; background: linear-gradient(150deg, #14477d, #0a2540); }
+
+.app-usermenu { position: absolute; right: 0; top: calc(100% + 8px); background: #fff; border: 1px solid var(--gt-border); border-radius: .6rem; box-shadow: var(--gt-shadow); min-width: 220px; padding: .35rem; z-index: 80; }
+.app-usermenu-item { display: flex; align-items: center; gap: .6rem; width: 100%; text-align: left; background: none; border: none; cursor: pointer; padding: .6rem .7rem; border-radius: .5rem; font-size: .85rem; color: var(--gt-text); text-decoration: none; font-family: inherit; }
+.app-usermenu-item:hover { background: var(--gt-surface-2); }
+
+.app-scrim { display: none; }
+@media (max-width: 991.98px) {
+  .app-sidebar { position: fixed; left: 0; top: 0; transform: translateX(-100%); transition: transform .22s ease; box-shadow: var(--gt-shadow-lg); }
+  .app-sidebar.mobile-open { transform: translateX(0); }
+  .app-shell.collapsed .app-sidebar { width: var(--gt-sidebar-w); }
+  .app-shell.collapsed .nav-label, .app-shell.collapsed .brand-name, .app-shell.collapsed .nav-section-label { display: inline !important; }
+  .app-shell.collapsed .app-nav-item { justify-content: flex-start; }
+  .app-scrim { display: block; position: fixed; inset: 0; background: rgba(10,37,64,.5); z-index: 55; }
+}
+
+/* ---------- Badges: soft pill status chips ---------- */
+.badge { font-weight: 600; letter-spacing: 0.01em; padding: 0.35em 0.7em; border-radius: 999px; }
+.badge.bg-success { background-color: var(--gt-success-bg) !important; color: #065f46 !important; }
+.badge.bg-warning { background-color: var(--gt-warning-bg) !important; color: #92400e !important; }
+.badge.bg-danger  { background-color: var(--gt-danger-bg)  !important; color: #991b1b !important; }
+.badge.bg-info    { background-color: var(--gt-info-bg)    !important; color: #075985 !important; }
+.badge.bg-primary { background-color: var(--gt-primary-50) !important; color: var(--gt-primary-600) !important; }
+.badge.bg-secondary { background-color: var(--gt-surface-2) !important; color: #475569 !important; }
+.badge.bg-light   { background-color: var(--gt-surface-2) !important; color: #475569 !important; }
+
+/* Variant classes used by <gt-status-badge> (badge-{success|warning|danger|info|neutral}) */
+.badge-success { background-color: var(--gt-success-bg); color: #065f46; }
+.badge-warning { background-color: var(--gt-warning-bg); color: #92400e; }
+.badge-danger  { background-color: var(--gt-danger-bg);  color: #991b1b; }
+.badge-info    { background-color: var(--gt-info-bg);    color: #075985; }
+.badge-neutral { background-color: var(--gt-neutral-bg); color: #475569; }
+
+/* ---------- Tables ---------- */
+.table > thead th {
+  font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em;
+  color: var(--gt-text-muted); background: #f8fafc; border-bottom-color: var(--gt-border);
+  white-space: nowrap;
+}
+.table > tbody td { vertical-align: middle; }
+.money { font-variant-numeric: tabular-nums; font-weight: 600; }
+
+/* Legacy custom table still used in a couple of places */
+.gt-table { width: 100%; border-collapse: collapse; font-size: 0.87rem; }
+.gt-table thead th {
+  text-align: left; padding: 0.8rem 1.1rem; font-size: 0.72rem; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.05em; color: var(--gt-text-muted);
+  background: var(--gt-surface-2); border-bottom: 1px solid var(--gt-border); white-space: nowrap;
+}
+.gt-table tbody td { padding: 0.85rem 1.1rem; border-bottom: 1px solid var(--gt-border); vertical-align: middle; }
+.gt-table tbody tr:hover { background: var(--gt-surface-2); }
+
+/* ---------- Definition lists ---------- */
+.kv { display: grid; grid-template-columns: 160px 1fr; gap: 0.55rem 1rem; margin: 0; }
+.kv dt { color: var(--gt-text-muted); font-weight: 600; font-size: 0.8rem; }
+.kv dd { margin: 0; }
+@media (max-width: 560px) { .kv { grid-template-columns: 1fr; gap: 0.1rem 0; } .kv dd { margin-bottom: 0.6rem; } }
+
+/* ---------- Scroll-reveal ---------- */
+.gt-reveal { opacity: 0; transform: translateY(20px); transition: opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1), transform 0.6s cubic-bezier(0.22, 1, 0.36, 1); }
+.gt-reveal-in { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) { .gt-reveal { opacity: 1 !important; transform: none !important; transition: none !important; } }
+
+/* ---------- Scrollbar ---------- */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 6px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+::-webkit-scrollbar-track { background: transparent; }

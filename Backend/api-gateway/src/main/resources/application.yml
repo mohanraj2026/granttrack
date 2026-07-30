@@ -1,0 +1,62 @@
+server:
+  port: 8089
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      # Explicit routes only (discovery locator disabled) so the public URL surface
+      # stays stable and does not leak internal service ids.
+      discovery:
+        locator:
+          enabled: false
+      default-filters:
+        # The downstream services set their own CORS headers; the gateway also applies
+        # its global CORS config. Keep a single value to avoid "multiple values" browser errors.
+        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_UNIQUE
+      routes:
+        - id: auth-service
+          uri: lb://auth-service
+          predicates:
+            - Path=/api/v1/auth/**,/api/v1/users/**,/api/v1/audit-logs/**
+        - id: notification-service
+          uri: lb://notification-service
+          predicates:
+            - Path=/api/v1/notifications/**
+        - id: finance-service
+          uri: lb://finance-service
+          predicates:
+            - Path=/api/v1/disbursements/**
+        # Catch-all: everything else (applications, funding, reviews, awards,
+        # progress, outputs, swagger, actuator) stays with the monolithic core.
+        - id: core-service
+          uri: lb://core-service
+          predicates:
+            - Path=/api/v1/**,/v3/api-docs/**,/swagger-ui/**,/swagger-ui.html
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "http://localhost:4200"
+            allowedMethods: [GET, POST, PUT, PATCH, DELETE, OPTIONS]
+            allowedHeaders: "*"
+            allowCredentials: true
+            exposedHeaders: "X-Correlation-Id"
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+  instance:
+    prefer-ip-address: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway
+
+logging:
+  level:
+    org.springframework.cloud.gateway: INFO
+    com.netflix.discovery: WARN
