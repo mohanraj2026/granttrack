@@ -1,4 +1,4 @@
-# GrantTrack — API Examples
+# GrantTrack — API Examples to study
 
 All endpoints are under `/api/v1`. Every response uses the standard envelope:
 ```json
