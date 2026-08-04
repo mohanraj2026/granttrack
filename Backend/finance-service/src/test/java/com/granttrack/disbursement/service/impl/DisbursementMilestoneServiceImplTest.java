@@ -20,8 +20,9 @@ import com.granttrack.disbursement.entity.MilestoneStatus;
 import com.granttrack.disbursement.mapper.DisbursementMapper;
 import com.granttrack.disbursement.repository.DisbursementMilestoneRepository;
 import com.granttrack.disbursement.repository.FundDisbursementRepository;
-import com.granttrack.disbursement.service.DocumentStorageService;
 import com.granttrack.notification.service.NotificationService;
+import com.granttrack.progress.entity.ProgressReport;
+import com.granttrack.progress.repository.ProgressReportRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -35,9 +36,6 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -46,6 +44,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
@@ -69,13 +68,10 @@ class DisbursementMilestoneServiceImplTest {
     @Mock
     private GrantApplicationRepository applicationRepository;
     @Mock
-    private DocumentStorageService documentStorageService;
+    private ProgressReportRepository progressReportRepository;
 
     @InjectMocks
     private DisbursementMilestoneServiceImpl milestoneService;
-
-    private final MultipartFile evidenceFile =
-            new MockMultipartFile("file", "evidence.pdf", "application/pdf", "evidence".getBytes());
 
     private MockedStatic<SecurityUtils> securityUtilsMock;
 
@@ -106,6 +102,13 @@ class DisbursementMilestoneServiceImplTest {
                 GrantApplication.builder().principalInvestigatorId(PI).build()));
     }
 
+    private ProgressReport report(String status) {
+        ProgressReport r = new ProgressReport();
+        r.setMilestoneId(1L);
+        r.setStatus(status);
+        return r;
+    }
+
     @Test
     void create_Success() {
         MilestoneRequest request = new MilestoneRequest(AWARD_ID, 1, "Milestone 1", LocalDate.now(), new BigDecimal("10000"), true);
@@ -116,7 +119,7 @@ class DisbursementMilestoneServiceImplTest {
         when(milestoneRepository.existsByAwardIdAndMilestoneNumber(AWARD_ID, 1)).thenReturn(false);
         when(milestoneRepository.sumAmountByAwardId(AWARD_ID)).thenReturn(BigDecimal.ZERO);
         when(milestoneRepository.save(any(DisbursementMilestone.class))).thenReturn(milestone);
-        when(mapper.toResponse(milestone)).thenReturn(response);
+        when(mapper.toResponse(any(DisbursementMilestone.class), anyString())).thenReturn(response);
 
         assertNotNull(milestoneService.create(request));
         verify(milestoneRepository, times(1)).save(any(DisbursementMilestone.class));
@@ -165,7 +168,7 @@ class DisbursementMilestoneServiceImplTest {
         when(awardRepository.findById(AWARD_ID)).thenReturn(Optional.of(activeAward("100000")));
         when(milestoneRepository.sumAmountByAwardId(AWARD_ID)).thenReturn(new BigDecimal("10000"));
         when(milestoneRepository.save(any(DisbursementMilestone.class))).thenReturn(milestone);
-        when(mapper.toResponse(milestone)).thenReturn(response);
+        when(mapper.toResponse(any(DisbursementMilestone.class), anyString())).thenReturn(response);
 
         assertNotNull(milestoneService.update(1L, request));
         verify(milestoneRepository, times(1)).save(any(DisbursementMilestone.class));
@@ -174,7 +177,7 @@ class DisbursementMilestoneServiceImplTest {
     @Test
     void update_NotUpcoming_ThrowsException() {
         MilestoneUpdateRequest request = new MilestoneUpdateRequest("Updated", LocalDate.now(), new BigDecimal("15000"), false);
-        DisbursementMilestone milestone = DisbursementMilestone.builder().status(MilestoneStatus.APPROVED).build();
+        DisbursementMilestone milestone = DisbursementMilestone.builder().status(MilestoneStatus.COMPLETED).build();
         milestone.setId(1L);
         when(milestoneRepository.findById(1L)).thenReturn(Optional.of(milestone));
 
@@ -189,7 +192,7 @@ class DisbursementMilestoneServiceImplTest {
 
         when(milestoneRepository.findById(1L)).thenReturn(Optional.of(milestone));
         wireOwnership();
-        when(mapper.toResponse(milestone)).thenReturn(response);
+        when(mapper.toResponse(any(DisbursementMilestone.class), anyString())).thenReturn(response);
 
         assertNotNull(milestoneService.getById(1L));
     }
@@ -213,7 +216,7 @@ class DisbursementMilestoneServiceImplTest {
         when(applicationRepository.findIdsByPrincipalInvestigatorId(PI)).thenReturn(List.of(APP_ID));
         when(awardRepository.findIdsByApplicationIdIn(List.of(APP_ID))).thenReturn(List.of(AWARD_ID));
         when(milestoneRepository.findAll(any(Specification.class), eq(pageable))).thenReturn(page);
-        when(mapper.toResponse(any(DisbursementMilestone.class))).thenReturn(response);
+        when(mapper.toResponse(any(DisbursementMilestone.class), anyString())).thenReturn(response);
 
         Page<MilestoneResponse> result = milestoneService.search(AWARD_ID, "UPCOMING", pageable);
 
@@ -221,84 +224,66 @@ class DisbursementMilestoneServiceImplTest {
     }
 
     @Test
-    void submitEvidence_Owner_Success() {
-        loginAs(PI);
+    void verify_ReportApproved_Success() {
         DisbursementMilestone milestone = DisbursementMilestone.builder()
-                .awardId(AWARD_ID).evidenceRequired(true).status(MilestoneStatus.UPCOMING).build();
+                .awardId(AWARD_ID).milestoneNumber(1).status(MilestoneStatus.UPCOMING).build();
+        milestone.setId(1L);
         MilestoneResponse response = MilestoneResponse.builder().id(1L).build();
 
         when(milestoneRepository.findById(1L)).thenReturn(Optional.of(milestone));
-        wireOwnership();
-        when(documentStorageService.storeMilestoneEvidence(eq(1L), any())).thenReturn("milestones/1/evidence/x.pdf");
+        when(progressReportRepository.findTopByMilestoneIdOrderByIdDesc(1L)).thenReturn(Optional.of(report("APPROVED")));
         when(milestoneRepository.save(any(DisbursementMilestone.class))).thenReturn(milestone);
-        when(mapper.toResponse(milestone)).thenReturn(response);
-
-        assertNotNull(milestoneService.submitEvidence(1L, "Completed the deliverable", evidenceFile));
-        assertEquals(MilestoneStatus.EVIDENCE_SUBMITTED, milestone.getStatus());
-        assertEquals("milestones/1/evidence/x.pdf", milestone.getEvidenceDocPath());
-        assertEquals("Completed the deliverable", milestone.getEvidenceNote());
-    }
-
-    @Test
-    void submitEvidence_RequiredDocMissing_ThrowsException() {
-        loginAs(PI);
-        DisbursementMilestone milestone = DisbursementMilestone.builder()
-                .awardId(AWARD_ID).evidenceRequired(true).status(MilestoneStatus.UPCOMING).build();
-
-        when(milestoneRepository.findById(1L)).thenReturn(Optional.of(milestone));
-        wireOwnership();
-
-        assertThrows(BusinessException.class, () -> milestoneService.submitEvidence(1L, "note", null));
-        verify(milestoneRepository, never()).save(any(DisbursementMilestone.class));
-    }
-
-    @Test
-    void submitEvidence_NotOwner_ThrowsAccessDenied() {
-        loginAs(999L);
-        DisbursementMilestone milestone = DisbursementMilestone.builder().awardId(AWARD_ID).status(MilestoneStatus.UPCOMING).build();
-
-        when(milestoneRepository.findById(1L)).thenReturn(Optional.of(milestone));
-        wireOwnership();
-
-        assertThrows(AccessDeniedException.class, () -> milestoneService.submitEvidence(1L, "note", evidenceFile));
-        verify(milestoneRepository, never()).save(any(DisbursementMilestone.class));
-    }
-
-    @Test
-    void rejectEvidence_Success() {
-        DisbursementMilestone milestone = DisbursementMilestone.builder()
-                .awardId(AWARD_ID).milestoneNumber(1).status(MilestoneStatus.EVIDENCE_SUBMITTED).build();
-        MilestoneResponse response = MilestoneResponse.builder().id(1L).build();
-
-        when(milestoneRepository.findById(1L)).thenReturn(Optional.of(milestone));
-        when(milestoneRepository.save(any(DisbursementMilestone.class))).thenReturn(milestone);
-        when(mapper.toResponse(milestone)).thenReturn(response);
+        when(mapper.toResponse(any(DisbursementMilestone.class), anyString())).thenReturn(response);
         when(awardRepository.findById(AWARD_ID)).thenReturn(Optional.of(activeAward("100000")));
         when(applicationRepository.findById(APP_ID)).thenReturn(Optional.of(
                 GrantApplication.builder().principalInvestigatorId(PI).build()));
 
-        assertNotNull(milestoneService.rejectEvidence(1L, "Evidence incomplete"));
-        assertEquals(MilestoneStatus.UPCOMING, milestone.getStatus());
-        assertEquals("Evidence incomplete", milestone.getEvidenceReviewComment());
+        assertNotNull(milestoneService.verify(1L));
+        assertEquals(MilestoneStatus.COMPLETED, milestone.getStatus());
     }
 
     @Test
-    void approve_Success() {
-        DisbursementMilestone milestone = DisbursementMilestone.builder().awardId(AWARD_ID).status(MilestoneStatus.EVIDENCE_SUBMITTED).build();
-        MilestoneResponse response = MilestoneResponse.builder().id(1L).build();
-
+    void verify_NoReport_ThrowsException() {
+        DisbursementMilestone milestone = DisbursementMilestone.builder()
+                .awardId(AWARD_ID).milestoneNumber(1).status(MilestoneStatus.UPCOMING).build();
+        milestone.setId(1L);
         when(milestoneRepository.findById(1L)).thenReturn(Optional.of(milestone));
-        when(milestoneRepository.save(any(DisbursementMilestone.class))).thenReturn(milestone);
-        when(mapper.toResponse(milestone)).thenReturn(response);
+        when(progressReportRepository.findTopByMilestoneIdOrderByIdDesc(1L)).thenReturn(Optional.empty());
 
-        assertNotNull(milestoneService.approve(1L));
-        assertEquals(MilestoneStatus.APPROVED, milestone.getStatus());
+        assertThrows(BusinessException.class, () -> milestoneService.verify(1L));
+        assertEquals(MilestoneStatus.UPCOMING, milestone.getStatus());
     }
 
     @Test
-    void release_Success() {
+    void verify_ReportNotApprovedByCompliance_ThrowsException() {
+        DisbursementMilestone milestone = DisbursementMilestone.builder()
+                .awardId(AWARD_ID).milestoneNumber(1).status(MilestoneStatus.UPCOMING).build();
+        milestone.setId(1L);
+        when(milestoneRepository.findById(1L)).thenReturn(Optional.of(milestone));
+        when(progressReportRepository.findTopByMilestoneIdOrderByIdDesc(1L)).thenReturn(Optional.of(report("SUBMITTED")));
+
+        assertThrows(BusinessException.class, () -> milestoneService.verify(1L));
+        assertEquals(MilestoneStatus.UPCOMING, milestone.getStatus());
+    }
+
+    @Test
+    void verify_EarlierMilestoneNotDisbursed_ThrowsException() {
+        DisbursementMilestone milestone = DisbursementMilestone.builder()
+                .awardId(AWARD_ID).milestoneNumber(2).status(MilestoneStatus.UPCOMING).build();
+        milestone.setId(2L);
+        when(milestoneRepository.findById(2L)).thenReturn(Optional.of(milestone));
+        when(milestoneRepository.countByAwardIdAndMilestoneNumberLessThanAndStatusNot(AWARD_ID, 2, MilestoneStatus.DISBURSED))
+                .thenReturn(1L);
+
+        assertThrows(BusinessException.class, () -> milestoneService.verify(2L));
+        assertEquals(MilestoneStatus.UPCOMING, milestone.getStatus());
+    }
+
+    @Test
+    void release_Completed_Success() {
         ReleaseFundsRequest request = new ReleaseFundsRequest("AccountRef123", "UTR-778812", LocalDate.now());
-        DisbursementMilestone milestone = DisbursementMilestone.builder().awardId(AWARD_ID).amount(new BigDecimal("10000")).status(MilestoneStatus.APPROVED).build();
+        DisbursementMilestone milestone = DisbursementMilestone.builder()
+                .awardId(AWARD_ID).milestoneNumber(1).amount(new BigDecimal("10000")).status(MilestoneStatus.COMPLETED).build();
         milestone.setId(1L);
         FundDisbursement disbursement = FundDisbursement.builder().build();
         FundDisbursementResponse response = FundDisbursementResponse.builder().id(1L).build();
@@ -307,13 +292,16 @@ class DisbursementMilestoneServiceImplTest {
         when(disbursementRepository.save(any(FundDisbursement.class))).thenReturn(disbursement);
         when(milestoneRepository.save(any(DisbursementMilestone.class))).thenReturn(milestone);
         when(mapper.toResponse(disbursement)).thenReturn(response);
+        when(awardRepository.findById(AWARD_ID)).thenReturn(Optional.of(activeAward("100000")));
+        when(applicationRepository.findById(APP_ID)).thenReturn(Optional.of(
+                GrantApplication.builder().principalInvestigatorId(PI).build()));
 
         assertNotNull(milestoneService.release(1L, request));
         assertEquals(MilestoneStatus.DISBURSED, milestone.getStatus());
     }
 
     @Test
-    void release_NotApproved_ThrowsException() {
+    void release_NotCompleted_ThrowsException() {
         ReleaseFundsRequest request = new ReleaseFundsRequest("AccountRef123", "UTR-778812", LocalDate.now());
         DisbursementMilestone milestone = DisbursementMilestone.builder().status(MilestoneStatus.UPCOMING).build();
         milestone.setId(1L);

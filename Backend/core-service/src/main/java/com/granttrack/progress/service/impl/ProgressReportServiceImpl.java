@@ -3,6 +3,10 @@ package com.granttrack.progress.service.impl;
 import com.granttrack.application.entity.GrantApplication;
 import com.granttrack.application.repository.GrantApplicationRepository;
 import com.granttrack.application.service.DocumentStorageService;
+import com.granttrack.auth.entity.RoleName;
+import com.granttrack.auth.entity.User;
+import com.granttrack.auth.entity.UserStatus;
+import com.granttrack.auth.repository.UserRepository;
 import com.granttrack.award.entity.AwardStatus;
 import com.granttrack.award.entity.GrantAward;
 import com.granttrack.award.repository.GrantAwardRepository;
@@ -50,6 +54,7 @@ public class ProgressReportServiceImpl implements ProgressReportService {
     private final GrantApplicationRepository applicationRepository;
     private final NotificationService notificationService;
     private final DocumentStorageService documentStorageService;
+    private final UserRepository userRepository;
 
     @Override
     @Transactional
@@ -63,6 +68,7 @@ public class ProgressReportServiceImpl implements ProgressReportService {
         assertOwningPrincipalInvestigator(award);
         ProgressReport report = ProgressReport.builder()
                 .awardId(request.awardId())
+                .milestoneId(request.milestoneId())
                 .period(request.period())
                 .summary(request.summary())
                 .keyAchievements(request.keyAchievements())
@@ -83,6 +89,9 @@ public class ProgressReportServiceImpl implements ProgressReportService {
             throw new BusinessException("Only a DRAFT or REVISION_REQUESTED report can be edited (current: " + report.getStatus() + ")");
         }
         report.setAwardId(request.awardId());
+        if (request.milestoneId() != null) {
+            report.setMilestoneId(request.milestoneId());
+        }
         report.setPeriod(request.period());
         report.setSummary(request.summary());
         report.setKeyAchievements(request.keyAchievements());
@@ -103,7 +112,12 @@ public class ProgressReportServiceImpl implements ProgressReportService {
         report.setStatus(ProgressStatus.SUBMITTED);
         report.setSubmittedDate(Instant.now());
         report.setSubmittedById(SecurityUtils.getCurrentUserId().orElse(null));
-        return mapper.toResponse(reportRepository.save(report));
+        ProgressReport saved = reportRepository.save(report);
+        // The Compliance Officer(s) review submitted reports — notify them there is one waiting.
+        notifyComplianceOfficers("A progress report"
+                + (report.getPeriod() != null ? " for " + report.getPeriod() : "")
+                + " has been submitted and is awaiting your review.");
+        return mapper.toResponse(saved);
     }
 
     @Override
@@ -128,9 +142,15 @@ public class ProgressReportServiceImpl implements ProgressReportService {
         }
         report.setReviewComment(comment);
         ProgressReport saved = reportRepository.save(report);
+        String periodText = report.getPeriod() != null ? " for " + report.getPeriod() : "";
+        String commentText = StringUtils.hasText(comment) ? " Reviewer comment: " + comment : "";
+        // Notify the researcher (owning PI) of the compliance outcome.
         notifyOwningPrincipalInvestigator(report.getAwardId(),
-                "Your progress report" + (report.getPeriod() != null ? " for " + report.getPeriod() : "") + " has been " + outcome + "."
-                        + (StringUtils.hasText(comment) ? " Reviewer comment: " + comment : ""));
+                "Your progress report" + periodText + " has been " + outcome + "." + commentText);
+        // Notify the assigned Finance Officer so they can verify the milestone and proceed to disbursement.
+        notifyAssignedFinanceOfficer(report.getAwardId(),
+                "The Compliance Officer has " + outcome + " a progress report" + periodText
+                        + ". Please review the outcome and verify the milestone." + commentText);
         return mapper.toResponse(saved);
     }
 
@@ -246,6 +266,37 @@ public class ProgressReportServiceImpl implements ProgressReportService {
                             notificationService.notify(app.getPrincipalInvestigatorId(), message, NotificationCategory.PROGRESS)));
         } catch (Exception e) {
             log.warn("Failed to send progress report notification", e);
+        }
+    }
+
+    /** Notify the finance officer assigned to the award (best-effort; never breaks the review). */
+    private void notifyAssignedFinanceOfficer(Long awardId, String message) {
+        try {
+            awardRepository.findById(awardId).ifPresent(award -> {
+                Long financeOfficerId = award.getFinanceOfficerId();
+                if (financeOfficerId != null) {
+                    notificationService.notify(financeOfficerId, message, NotificationCategory.PROGRESS);
+                }
+            });
+        } catch (Exception e) {
+            log.warn("Failed to notify finance officer of a progress report review", e);
+        }
+    }
+
+    /** Notify every ACTIVE Compliance Officer that a progress report is awaiting review (best-effort). */
+    private void notifyComplianceOfficers(String message) {
+        try {
+            Specification<User> spec = (root, cq, cb) -> {
+                cq.distinct(true);
+                return cb.and(
+                        cb.equal(root.get("status"), UserStatus.ACTIVE),
+                        root.join("roles").get("name").in(RoleName.ROLE_COMPLIANCE_OFFICER.name()));
+            };
+            for (User officer : userRepository.findAll(spec)) {
+                notificationService.notify(officer.getId(), message, NotificationCategory.PROGRESS);
+            }
+        } catch (Exception e) {
+            log.warn("Failed to notify compliance officers of a submitted progress report", e);
         }
     }
 }

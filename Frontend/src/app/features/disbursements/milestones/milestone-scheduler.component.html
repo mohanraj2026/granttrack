@@ -42,16 +42,26 @@
               <button class="dropdown-item py-2" *gtHasRole="[Role.FINANCE_OFFICER, Role.GRANT_ADMIN, Role.ADMIN]" (click)="openEdit(row)">
                 Edit
               </button>
-              <button class="dropdown-item py-2" *gtHasRole="[Role.RESEARCHER]" (click)="openEvidence(row)">
-                Submit Evidence
+              <button class="dropdown-item py-2" *gtHasRole="[Role.RESEARCHER]" [disabled]="isLocked(row)" (click)="submitProgressReport(row)">
+                {{ isLocked(row) ? 'Locked — complete earlier milestone' : 'Submit Progress Report' }}
               </button>
             }
-            @if (row.status === 'EVIDENCE_SUBMITTED') {
-              <button class="dropdown-item py-2" *gtHasRole="[Role.FINANCE_OFFICER, Role.GRANT_ADMIN]" (click)="openReview(row)">
-                Review &amp; Approve
+            @if (row.status === 'REVISION_REQUESTED') {
+              <button class="dropdown-item py-2" *gtHasRole="[Role.RESEARCHER]" (click)="submitProgressReport(row)">
+                Update Progress Report
               </button>
             }
-            @if (row.status === 'APPROVED') {
+            @if (row.status === 'UNDER_REVIEW' || row.status === 'AWAITING_FINANCE_VERIFICATION' || row.status === 'REVISION_REQUESTED') {
+              <button class="dropdown-item py-2" (click)="viewReport(row)">
+                View progress report
+              </button>
+            }
+            @if (row.status === 'AWAITING_FINANCE_VERIFICATION') {
+              <button class="dropdown-item py-2" *gtHasRole="[Role.FINANCE_OFFICER, Role.GRANT_ADMIN]" [disabled]="isLocked(row)" (click)="verify(row)">
+                Verify milestone
+              </button>
+            }
+            @if (row.status === 'COMPLETED') {
               <button class="dropdown-item py-2" *gtHasRole="[Role.FINANCE_OFFICER]" (click)="openRelease(row)">
                 Release Funds
               </button>
@@ -98,11 +108,12 @@
                     <span class="small text-muted">Due: {{ (m.dueDate | date) || 'TBD' }}</span>
                     <strong class="fs-5 text-success">{{ m.amount | currency:'INR':'symbol':'1.0-0' }}</strong>
                     <span class="badge" [ngClass]="{
-                      'bg-info': m.status === 'UPCOMING',
-                      'bg-warning text-dark': m.status === 'EVIDENCE_SUBMITTED',
-                      'bg-primary': m.status === 'APPROVED',
-                      'bg-success': m.status === 'DISBURSED',
-                      'bg-danger': m.status === 'OVERDUE'
+                      'bg-secondary': m.status === 'UPCOMING',
+                      'bg-info': m.status === 'UNDER_REVIEW',
+                      'bg-warning text-dark': m.status === 'AWAITING_FINANCE_VERIFICATION',
+                      'bg-danger': m.status === 'REVISION_REQUESTED' || m.status === 'OVERDUE',
+                      'bg-primary': m.status === 'COMPLETED',
+                      'bg-success': m.status === 'DISBURSED'
                     }">{{ m.status.replace('_', ' ') }}</span>
                   </div>
                 </div>
@@ -115,12 +126,24 @@
                   <div class="d-flex gap-2">
                     @if (m.status === 'UPCOMING') {
                       <button class="btn btn-sm btn-outline-secondary" *gtHasRole="[Role.FINANCE_OFFICER, Role.GRANT_ADMIN, Role.ADMIN]" (click)="openEdit(m)">Edit</button>
-                      <button class="btn btn-sm btn-primary shadow-sm" *gtHasRole="[Role.RESEARCHER]" (click)="openEvidence(m)">Submit Evidence</button>
+                      <button class="btn btn-sm btn-primary shadow-sm" *gtHasRole="[Role.RESEARCHER]" [disabled]="isLocked(m)" (click)="submitProgressReport(m)">
+                        {{ isLocked(m) ? 'Locked' : 'Submit Progress Report' }}
+                      </button>
                     }
-                    @if (m.status === 'EVIDENCE_SUBMITTED') {
-                      <button class="btn btn-sm btn-primary shadow-sm" *gtHasRole="[Role.FINANCE_OFFICER, Role.GRANT_ADMIN]" (click)="openReview(m)">Review &amp; Approve</button>
+                    @if (m.status === 'REVISION_REQUESTED') {
+                      <button class="btn btn-sm btn-outline-secondary" (click)="viewReport(m)">View report</button>
+                      <button class="btn btn-sm btn-primary shadow-sm" *gtHasRole="[Role.RESEARCHER]" (click)="submitProgressReport(m)">Update Progress Report</button>
                     }
-                    @if (m.status === 'APPROVED') {
+                    @if (m.status === 'UNDER_REVIEW') {
+                      <button class="btn btn-sm btn-outline-secondary" (click)="viewReport(m)">View report</button>
+                    }
+                    @if (m.status === 'AWAITING_FINANCE_VERIFICATION') {
+                      <button class="btn btn-sm btn-outline-secondary" (click)="viewReport(m)">View report</button>
+                      <button class="btn btn-sm btn-primary shadow-sm" *gtHasRole="[Role.FINANCE_OFFICER, Role.GRANT_ADMIN]" [disabled]="verifyingId() === m.id || isLocked(m)" (click)="verify(m)">
+                        @if (verifyingId() === m.id) { <span class="spinner-border spinner-border-sm"></span> Verifying… } @else { Verify milestone }
+                      </button>
+                    }
+                    @if (m.status === 'COMPLETED') {
                       <button class="btn btn-sm btn-success shadow-sm" *gtHasRole="[Role.FINANCE_OFFICER]" (click)="openRelease(m)">
                         Release Funds
                       </button>
@@ -241,70 +264,3 @@
   </div>
 </gt-modal>
 
-<!-- Researcher: submit milestone evidence-->
-<gt-modal [open]="evidenceModalOpen()" title="Submit Milestone Evidence" [width]="560" (closed)="evidenceModalOpen.set(false)">
-  <form [formGroup]="evidenceForm" id="evidenceForm" (ngSubmit)="confirmSubmitEvidence()">
-    <p class="text-secondary small mb-3">
-      Milestone <strong class="text-dark">#{{ evidenceTarget()?.milestoneNumber }}</strong> — {{ evidenceTarget()?.description }}
-    </p>
-    @if (evidenceTarget()?.evidenceReviewComment) {
-      <div class="alert alert-warning d-flex gap-2 border-0 small">
-        <gt-icon name="alert-triangle" [size]="16" class="flex-shrink-0 mt-1" />
-        <div><strong>Returned for revision:</strong> {{ evidenceTarget()?.evidenceReviewComment }}</div>
-      </div>
-    }
-    <div class="mb-3">
-      <label class="form-label" for="evNote">Completion note <span class="text-danger">*</span></label>
-      <textarea class="form-control" formControlName="note" id="evNote" rows="3"
-                placeholder="Describe what was completed for this milestone (e.g. 'Prototype fabricated and lab-tested; results attached.')" style="border-radius:10px;"></textarea>
-    </div>
-    <div>
-      <label class="form-label" for="evFile">
-        Supporting document @if (evidenceTarget()?.evidenceRequired) {<span class="text-danger">*</span>}
-      </label>
-      <input type="file" class="form-control" id="evFile" accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.zip,.png,.jpg,.jpeg" (change)="onEvidenceFile($event)" />
-      <div class="form-text">PDF, Word, Excel, image or ZIP, up to 10 MB.</div>
-    </div>
-  </form>
-  <div footer class="d-flex justify-content-end gap-2">
-    <button class="btn btn-light" (click)="evidenceModalOpen.set(false)">Cancel</button>
-    <button class="btn btn-primary px-4 d-inline-flex align-items-center gap-2" form="evidenceForm" type="submit" [disabled]="saving()">
-      @if (saving()) { <span class="spinner-border spinner-border-sm"></span> Submitting… } @else { <gt-icon name="send" [size]="16" /> Submit for approval }
-    </button>
-  </div>
-</gt-modal>
-
-<!-- Finance: review submitted evidence, then approve or return -->
-<gt-modal [open]="reviewModalOpen()" title="Review Milestone Evidence" [width]="560" (closed)="reviewModalOpen.set(false)">
-  <div>
-    <p class="text-secondary small mb-3">
-      Milestone <strong class="text-dark">#{{ reviewTarget()?.milestoneNumber }}</strong> · Award #{{ reviewTarget()?.awardId }} ·
-      <strong class="text-success">{{ reviewTarget()?.amount | currency:'INR':'symbol':'1.0-0' }}</strong>
-    </p>
-    <div class="mb-3">
-      <div class="small text-secondary fw-semibold mb-1">Researcher's completion note</div>
-      <div class="border rounded-3 p-3 bg-body-tertiary small">{{ reviewTarget()?.evidenceNote || 'No note provided.' }}</div>
-    </div>
-    <div class="mb-3">
-      @if (reviewTarget()?.hasEvidenceDocument) {
-        <button type="button" class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-2" (click)="downloadEvidence(reviewTarget()!)">
-          <gt-icon name="file-text" [size]="14" /> Download evidence ({{ reviewTarget()?.evidenceDocName }})
-        </button>
-      } @else {
-        <span class="text-secondary small">No document was attached.</span>
-      }
-    </div>
-    <form [formGroup]="reviewForm">
-      <label class="form-label" for="rvComment">Comment <span class="text-muted fw-normal">(required to return for revision)</span></label>
-      <textarea class="form-control" formControlName="comment" id="rvComment" rows="2"
-                placeholder="Optional on approval; explain what to fix if returning." style="border-radius:10px;"></textarea>
-    </form>
-  </div>
-  <div footer class="d-flex justify-content-between gap-2">
-    <button class="btn btn-outline-danger d-inline-flex align-items-center gap-2" (click)="rejectEvidence(reviewTarget()!)"><gt-icon name="x-circle" [size]="16" /> Return for revision</button>
-    <div class="d-flex gap-2">
-      <button class="btn btn-light" (click)="reviewModalOpen.set(false)">Cancel</button>
-      <button class="btn btn-success px-4 d-inline-flex align-items-center gap-2" (click)="approve(reviewTarget()!)"><gt-icon name="check" [size]="16" /> Approve milestone</button>
-    </div>
-  </div>
-</gt-modal>

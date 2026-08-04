@@ -13,12 +13,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -28,9 +25,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/v1/disbursements")
@@ -73,45 +68,16 @@ public class DisbursementController {
         return ResponseEntity.ok(ApiResponse.success(milestoneService.getById(id)));
     }
 
-    @PostMapping(value = "/milestones/{id}/submit-evidence", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasRole('RESEARCHER')")
-    @Operation(summary = "Submit evidence (completion note + supporting document) for a milestone (UPCOMING -> EVIDENCE_SUBMITTED)")
-    public ResponseEntity<ApiResponse<MilestoneResponse>> submitEvidence(
-            @PathVariable Long id,
-            @RequestParam(required = false) String note,
-            @RequestPart(value = "file", required = false) MultipartFile file) {
-        return ResponseEntity.ok(ApiResponse.success("Evidence submitted", milestoneService.submitEvidence(id, note, file)));
-    }
-
-    @GetMapping("/milestones/{id}/evidence-document")
-    @Operation(summary = "Download a milestone's evidence document")
-    public ResponseEntity<Resource> downloadEvidence(@PathVariable Long id) {
-        DisbursementMilestoneService.EvidenceDocument doc = milestoneService.downloadEvidence(id);
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + doc.filename() + "\"")
-                .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                .body(doc.resource());
-    }
-
-    @PostMapping("/milestones/{id}/approve")
+    @PostMapping("/milestones/{id}/verify")
     @PreAuthorize("hasAnyRole('FINANCE_OFFICER','GRANT_ADMIN')")
-    @Operation(summary = "Approve a milestone (EVIDENCE_SUBMITTED -> APPROVED)")
-    public ResponseEntity<ApiResponse<MilestoneResponse>> approve(@PathVariable Long id) {
-        return ResponseEntity.ok(ApiResponse.success("Milestone approved", milestoneService.approve(id)));
-    }
-
-    @PostMapping("/milestones/{id}/reject-evidence")
-    @PreAuthorize("hasAnyRole('FINANCE_OFFICER','GRANT_ADMIN')")
-    @Operation(summary = "Return milestone evidence to the researcher for resubmission (EVIDENCE_SUBMITTED -> UPCOMING)")
-    public ResponseEntity<ApiResponse<MilestoneResponse>> rejectEvidence(@PathVariable Long id,
-                                                                         @RequestParam(required = false) String reason) {
-        return ResponseEntity.ok(ApiResponse.success("Evidence returned for resubmission",
-                milestoneService.rejectEvidence(id, reason)));
+    @Operation(summary = "Verify a milestone whose progress report the Compliance Officer approved (-> COMPLETED)")
+    public ResponseEntity<ApiResponse<MilestoneResponse>> verify(@PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.success("Milestone verified", milestoneService.verify(id)));
     }
 
     @PostMapping("/milestones/{id}/release")
     @PreAuthorize("hasRole('FINANCE_OFFICER')")
-    @Operation(summary = "Release funds for an APPROVED milestone (creates a fund disbursement)")
+    @Operation(summary = "Release funds for a COMPLETED (finance-verified) milestone (creates a fund disbursement)")
     public ResponseEntity<ApiResponse<FundDisbursementResponse>> release(@PathVariable Long id,
                                                                          @RequestBody(required = false) ReleaseFundsRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)

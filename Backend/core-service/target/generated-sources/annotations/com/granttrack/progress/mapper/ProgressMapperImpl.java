@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2026-08-03T11:37:09+0530",
+    date = "2026-08-04T17:06:16+0530",
     comments = "version: 1.6.3, compiler: Eclipse JDT (IDE) 3.46.100.v20260624-0231, environment: Java 21.0.11 (Eclipse Adoptium)"
 )
 @Component
@@ -29,6 +29,7 @@ public class ProgressMapperImpl implements ProgressMapper {
         progressReportResponse.createdAt( report.getCreatedAt() );
         progressReportResponse.id( report.getId() );
         progressReportResponse.keyAchievements( report.getKeyAchievements() );
+        progressReportResponse.milestoneId( report.getMilestoneId() );
         progressReportResponse.period( report.getPeriod() );
         progressReportResponse.reportDocName( report.getReportDocName() );
         progressReportResponse.reviewComment( report.getReviewComment() );

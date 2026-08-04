@@ -9,6 +9,8 @@ import java.math.BigDecimal;
 
 public record ProgressReportRequest(
         @NotNull Long awardId,
+        /** Optional: the disbursement milestone this report is the proof for. */
+        Long milestoneId,
         @Size(max = 50) String period,
         String summary,
         String keyAchievements,

@@ -2,6 +2,8 @@ import { DeliverableStatus, DeliverableType, ProgressStatus } from './enums';
 
 export interface ProgressReportRequest {
   awardId: number;
+  /** Optional: the disbursement milestone this report is the proof for. */
+  milestoneId?: number;
   period?: string;
   summary?: string;
   keyAchievements?: string;
@@ -11,6 +13,7 @@ export interface ProgressReportRequest {
 export interface ProgressReportResponse {
   id: number;
   awardId: number;
+  milestoneId?: number;
   period?: string;
   summary?: string;
   keyAchievements?: string;

@@ -48,7 +48,7 @@ class ProgressReportControllerTest {
 
     @Test
     void create_Success() throws Exception {
-        ProgressReportRequest request = new ProgressReportRequest(1L, "Q1", "Summary", "Achievements", "Challenges", new BigDecimal("50"));
+        ProgressReportRequest request = new ProgressReportRequest(1L, null, "Q1", "Summary", "Achievements", "Challenges", new BigDecimal("50"));
         ProgressReportResponse response = ProgressReportResponse.builder().id(1L).build();
 
         when(reportService.create(any(ProgressReportRequest.class))).thenReturn(response);
@@ -65,7 +65,7 @@ class ProgressReportControllerTest {
 
     @Test
     void update_Success() throws Exception {
-        ProgressReportRequest request = new ProgressReportRequest(1L, "Q1", "Summary", "Achievements", "Challenges", new BigDecimal("50"));
+        ProgressReportRequest request = new ProgressReportRequest(1L, null, "Q1", "Summary", "Achievements", "Challenges", new BigDecimal("50"));
         ProgressReportResponse response = ProgressReportResponse.builder().id(1L).build();
 
         when(reportService.update(eq(1L), any(ProgressReportRequest.class))).thenReturn(response);

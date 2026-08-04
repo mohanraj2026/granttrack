@@ -1,4 +1,0 @@
--------------------------------------------------------------------------------
-Test set: com.granttrack.output.service.impl.IPRecordServiceImplTest
--------------------------------------------------------------------------------
-Tests run: 14, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.175 s -- in com.granttrack.output.service.impl.IPRecordServiceImplTest

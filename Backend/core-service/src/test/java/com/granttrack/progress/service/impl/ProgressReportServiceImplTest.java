@@ -2,6 +2,8 @@ package com.granttrack.progress.service.impl;
 
 import com.granttrack.application.entity.GrantApplication;
 import com.granttrack.application.repository.GrantApplicationRepository;
+import com.granttrack.auth.entity.User;
+import com.granttrack.auth.repository.UserRepository;
 import com.granttrack.award.entity.AwardStatus;
 import com.granttrack.award.entity.GrantAward;
 import com.granttrack.award.repository.GrantAwardRepository;
@@ -60,6 +62,8 @@ class ProgressReportServiceImplTest {
     private NotificationService notificationService;
     @Mock
     private com.granttrack.application.service.DocumentStorageService documentStorageService;
+    @Mock
+    private UserRepository userRepository;
 
     @InjectMocks
     private ProgressReportServiceImpl reportService;
@@ -100,7 +104,7 @@ class ProgressReportServiceImplTest {
     }
 
     private ProgressReportRequest request() {
-        return new ProgressReportRequest(AWARD_ID, "Q1", "Summary", "Achievements", "Challenges", new BigDecimal("50"));
+        return new ProgressReportRequest(AWARD_ID, null, "Q1", "Summary", "Achievements", "Challenges", new BigDecimal("50"));
     }
 
     @Test
@@ -236,6 +240,43 @@ class ProgressReportServiceImplTest {
 
         assertNotNull(reportService.review(1L, "REQUEST_REVISION", "Please add budget detail"));
         assertEquals(ProgressStatus.REVISION_REQUESTED, report.getStatus());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void submit_NotifiesComplianceOfficers() {
+        loginAs(PI);
+        wireOwnership();
+        ProgressReport report = ProgressReport.builder().awardId(AWARD_ID).period("Q1").status(ProgressStatus.DRAFT).build();
+        report.setId(1L);
+        when(reportRepository.findById(1L)).thenReturn(Optional.of(report));
+        when(reportRepository.save(any(ProgressReport.class))).thenReturn(report);
+        when(mapper.toResponse(report)).thenReturn(ProgressReportResponse.builder().id(1L).build());
+        User officer = User.builder().build();
+        officer.setId(77L);
+        when(userRepository.findAll(any(Specification.class))).thenReturn(List.of(officer));
+
+        reportService.submit(1L);
+
+        verify(notificationService, times(1)).notify(eq(77L), anyString(), eq(NotificationCategory.PROGRESS));
+    }
+
+    @Test
+    void review_Approve_NotifiesAssignedFinanceOfficerAndResearcher() {
+        GrantAward award = GrantAward.builder().applicationId(APP_ID).status(AwardStatus.ACTIVE).financeOfficerId(50L).build();
+        award.setId(AWARD_ID);
+        ProgressReport report = ProgressReport.builder().awardId(AWARD_ID).period("Q1").status(ProgressStatus.SUBMITTED).build();
+        report.setId(1L);
+        when(reportRepository.findById(1L)).thenReturn(Optional.of(report));
+        when(reportRepository.save(any(ProgressReport.class))).thenReturn(report);
+        when(mapper.toResponse(report)).thenReturn(ProgressReportResponse.builder().id(1L).build());
+        when(awardRepository.findById(AWARD_ID)).thenReturn(Optional.of(award));
+        when(applicationRepository.findById(APP_ID)).thenReturn(Optional.of(piApp()));
+
+        reportService.review(1L, "APPROVE", "ok");
+
+        verify(notificationService, times(1)).notify(eq(50L), anyString(), eq(NotificationCategory.PROGRESS)); // finance officer
+        verify(notificationService, times(1)).notify(eq(PI), anyString(), eq(NotificationCategory.PROGRESS));   // researcher
     }
 
     @Test

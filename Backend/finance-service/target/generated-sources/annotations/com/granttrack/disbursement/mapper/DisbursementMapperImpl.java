@@ -9,35 +9,36 @@ import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2026-08-03T11:37:33+0530",
+    date = "2026-08-04T17:06:22+0530",
     comments = "version: 1.6.3, compiler: Eclipse JDT (IDE) 3.46.100.v20260624-0231, environment: Java 21.0.11 (Eclipse Adoptium)"
 )
 @Component
 public class DisbursementMapperImpl implements DisbursementMapper {
 
     @Override
-    public MilestoneResponse toResponse(DisbursementMilestone milestone) {
-        if ( milestone == null ) {
+    public MilestoneResponse toResponse(DisbursementMilestone milestone, String displayStatus) {
+        if ( milestone == null && displayStatus == null ) {
             return null;
         }
 
         MilestoneResponse.MilestoneResponseBuilder milestoneResponse = MilestoneResponse.builder();
 
-        milestoneResponse.amount( milestone.getAmount() );
-        milestoneResponse.awardId( milestone.getAwardId() );
-        milestoneResponse.createdAt( milestone.getCreatedAt() );
-        milestoneResponse.description( milestone.getDescription() );
-        milestoneResponse.dueDate( milestone.getDueDate() );
-        milestoneResponse.evidenceDocName( milestone.getEvidenceDocName() );
-        milestoneResponse.evidenceNote( milestone.getEvidenceNote() );
-        milestoneResponse.evidenceRequired( milestone.getEvidenceRequired() );
-        milestoneResponse.evidenceReviewComment( milestone.getEvidenceReviewComment() );
-        milestoneResponse.evidenceSubmittedDate( milestone.getEvidenceSubmittedDate() );
-        milestoneResponse.id( milestone.getId() );
-        milestoneResponse.milestoneNumber( milestone.getMilestoneNumber() );
-        milestoneResponse.updatedAt( milestone.getUpdatedAt() );
-
-        milestoneResponse.status( milestone.getStatus().name() );
+        if ( milestone != null ) {
+            milestoneResponse.amount( milestone.getAmount() );
+            milestoneResponse.awardId( milestone.getAwardId() );
+            milestoneResponse.createdAt( milestone.getCreatedAt() );
+            milestoneResponse.description( milestone.getDescription() );
+            milestoneResponse.dueDate( milestone.getDueDate() );
+            milestoneResponse.evidenceDocName( milestone.getEvidenceDocName() );
+            milestoneResponse.evidenceNote( milestone.getEvidenceNote() );
+            milestoneResponse.evidenceRequired( milestone.getEvidenceRequired() );
+            milestoneResponse.evidenceReviewComment( milestone.getEvidenceReviewComment() );
+            milestoneResponse.evidenceSubmittedDate( milestone.getEvidenceSubmittedDate() );
+            milestoneResponse.id( milestone.getId() );
+            milestoneResponse.milestoneNumber( milestone.getMilestoneNumber() );
+            milestoneResponse.updatedAt( milestone.getUpdatedAt() );
+        }
+        milestoneResponse.status( displayStatus );
         milestoneResponse.hasEvidenceDocument( milestone.getEvidenceDocPath() != null );
 
         return milestoneResponse.build();

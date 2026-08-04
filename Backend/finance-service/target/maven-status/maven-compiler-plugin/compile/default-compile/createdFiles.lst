@@ -2,6 +2,7 @@ com\granttrack\disbursement\entity\DisbursementMilestone$DisbursementMilestoneBu
 com\granttrack\disbursement\dto\request\MilestoneRequest.class
 com\granttrack\disbursement\dto\response\MilestoneResponse.class
 com\granttrack\disbursement\dto\request\ReleaseFundsRequest.class
+com\granttrack\disbursement\service\impl\DisbursementMilestoneServiceImpl$1.class
 com\granttrack\disbursement\entity\DisbursementMilestone.class
 com\granttrack\FinanceServiceApplication.class
 com\granttrack\disbursement\repository\FundDisbursementRepository.class
@@ -12,19 +13,18 @@ com\granttrack\notification\client\NotificationPublishRequest.class
 com\granttrack\application\entity\GrantApplication.class
 com\granttrack\disbursement\entity\MilestoneStatus.class
 com\granttrack\disbursement\repository\DisbursementMilestoneRepository.class
+com\granttrack\progress\repository\ProgressReportRepository.class
 com\granttrack\disbursement\service\DisbursementMilestoneService.class
 com\granttrack\notification\entity\NotificationCategory.class
 com\granttrack\disbursement\dto\response\FundDisbursementResponse.class
 com\granttrack\notification\client\NotificationClient.class
 com\granttrack\disbursement\mapper\DisbursementMapperImpl.class
-com\granttrack\disbursement\service\DisbursementMilestoneService$EvidenceDocument.class
 com\granttrack\disbursement\controller\DisbursementController.class
 com\granttrack\disbursement\entity\FundDisbursement$FundDisbursementBuilder.class
 com\granttrack\disbursement\mapper\DisbursementMapper.class
 com\granttrack\disbursement\dto\response\FundDisbursementResponse$FundDisbursementResponseBuilder.class
 com\granttrack\disbursement\entity\FundDisbursement.class
 com\granttrack\disbursement\service\impl\FundDisbursementServiceImpl.class
-com\granttrack\disbursement\service\DocumentStorageService.class
 com\granttrack\award\entity\FinanceReviewStatus.class
 com\granttrack\award\entity\GrantAward.class
 com\granttrack\disbursement\dto\request\MilestoneUpdateRequest.class
@@ -37,3 +37,4 @@ com\granttrack\disbursement\entity\DisbursementStatus.class
 com\granttrack\award\entity\AwardStatus.class
 com\granttrack\application\repository\GrantApplicationRepository.class
 com\granttrack\disbursement\service\impl\DisbursementMilestoneServiceImpl.class
+com\granttrack\progress\entity\ProgressReport.class

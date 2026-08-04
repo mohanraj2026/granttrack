@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ActivatedRoute } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, FormsModule, Validators } from '@angular/forms';
 import { ProgressService } from '../progress.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -45,8 +46,12 @@ export class ProgressReportsComponent implements OnInit {
   private awardApi = inject(AwardService);
   private fb = inject(FormBuilder);
   private toast = inject(ToastService);
+  private route = inject(ActivatedRoute);
 
   protected readonly Role = Role;
+
+  /** When arriving from a milestone's "Submit Progress Report" action, the report is linked to it. */
+  readonly pendingMilestoneId = signal<number | null>(null);
 
   readonly rows = signal<ProgressReportResponse[]>([]);
   readonly loading = signal(false);
@@ -107,6 +112,21 @@ export class ProgressReportsComponent implements OnInit {
   ngOnInit(): void {
     this.awardApi.list({ statuses: 'ACTIVE', size: 100 }).subscribe(r => this.awards.set(r.data.content));
     this.load();
+    // Deep-link from a milestone's "Submit Progress Report" action: open a create form pre-linked
+    // to that milestone (awardId + milestoneId), and scope the list to that award.
+    this.route.queryParamMap.subscribe((params) => {
+      const awardId = params.get('awardId');
+      const milestoneId = params.get('milestoneId');
+      const isNew = params.get('new');
+      if (awardId) {
+        this.onAwardFilter(Number(awardId));
+      }
+      if (isNew && awardId) {
+        this.openCreate();
+        this.pendingMilestoneId.set(milestoneId ? Number(milestoneId) : null);
+        this.form.patchValue({ awardId: Number(awardId) });
+      }
+    });
   }
 
   load(): void {
@@ -148,6 +168,7 @@ export class ProgressReportsComponent implements OnInit {
 
   openCreate(): void {
     this.editingId.set(null);
+    this.pendingMilestoneId.set(null);
     this.reportFile.set(null);
     this.form.reset({ awardId: null, budgetUtilisationPercent: null });
     this.modalOpen.set(true);
@@ -176,8 +197,11 @@ export class ProgressReportsComponent implements OnInit {
   save(): void {
     if (this.form.invalid) { this.form.markAllAsTouched(); return; }
     const v = this.form.getRawValue();
+    const id = this.editingId();
     const body = {
       awardId: v.awardId!,
+      // Attach the milestone link only when creating a milestone-linked report.
+      milestoneId: id ? undefined : (this.pendingMilestoneId() ?? undefined),
       period: v.period || undefined,
       summary: v.summary || undefined,
       keyAchievements: v.keyAchievements || undefined,
@@ -185,7 +209,6 @@ export class ProgressReportsComponent implements OnInit {
       budgetUtilisationPercent: v.budgetUtilisationPercent ?? undefined,
     };
     this.saving.set(true);
-    const id = this.editingId();
     const request$ = id ? this.api.updateReport(id, body) : this.api.createReport(body);
     request$.subscribe({
       next: (res) => {
@@ -205,7 +228,12 @@ export class ProgressReportsComponent implements OnInit {
   }
 
   private finishSave(edited: boolean): void {
-    this.toast.success(edited ? 'Progress report updated.' : 'Progress report created.');
+    this.toast.success(edited
+      ? 'Progress report updated.'
+      : (this.pendingMilestoneId()
+          ? 'Progress report created for the milestone. Submit it to send for review.'
+          : 'Progress report created.'));
+    this.pendingMilestoneId.set(null);
     this.modalOpen.set(false);
     this.saving.set(false);
     this.load();

@@ -22,21 +22,20 @@ import com.granttrack.award.entity.GrantAward;
 import com.granttrack.application.entity.GrantApplication;
 import com.granttrack.common.security.SecurityUtils;
 import com.granttrack.notification.entity.NotificationCategory;
+import com.granttrack.progress.entity.ProgressReport;
+import com.granttrack.progress.repository.ProgressReportRepository;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.core.io.Resource;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -54,7 +53,7 @@ public class DisbursementMilestoneServiceImpl implements DisbursementMilestoneSe
     private final com.granttrack.notification.service.NotificationService notificationService;
     private final com.granttrack.award.repository.GrantAwardRepository awardRepository;
     private final com.granttrack.application.repository.GrantApplicationRepository applicationRepository;
-    private final com.granttrack.disbursement.service.DocumentStorageService documentStorageService;
+    private final ProgressReportRepository progressReportRepository;
 
     @Override
     @Transactional
@@ -89,7 +88,7 @@ public class DisbursementMilestoneServiceImpl implements DisbursementMilestoneSe
                 .evidenceRequired(request.evidenceRequired() != null ? request.evidenceRequired() : Boolean.TRUE)
                 .status(MilestoneStatus.UPCOMING)
                 .build();
-        return mapper.toResponse(milestoneRepository.save(milestone));
+        return toResponse(milestoneRepository.save(milestone));
     }
 
     @Override
@@ -113,7 +112,7 @@ public class DisbursementMilestoneServiceImpl implements DisbursementMilestoneSe
         if (request.evidenceRequired() != null) {
             milestone.setEvidenceRequired(request.evidenceRequired());
         }
-        return mapper.toResponse(milestoneRepository.save(milestone));
+        return toResponse(milestoneRepository.save(milestone));
     }
 
     @Override
@@ -121,7 +120,7 @@ public class DisbursementMilestoneServiceImpl implements DisbursementMilestoneSe
     public MilestoneResponse getById(Long id) {
         DisbursementMilestone milestone = find(id);
         assertCanReadAward(milestone.getAwardId());
-        return mapper.toResponse(milestone);
+        return toResponse(milestone);
     }
 
     @Override
@@ -145,85 +144,31 @@ public class DisbursementMilestoneServiceImpl implements DisbursementMilestoneSe
             }
             return cb.and(predicates.toArray(new Predicate[0]));
         };
-        return milestoneRepository.findAll(spec, pageable).map(mapper::toResponse);
+        return milestoneRepository.findAll(spec, pageable).map(this::toResponse);
     }
 
     @Override
     @Transactional
-    public MilestoneResponse submitEvidence(Long id, String note, MultipartFile document) {
+    @Auditable(action = "VERIFY_MILESTONE", entityType = "DisbursementMilestone")
+    public MilestoneResponse verify(Long id) {
         DisbursementMilestone milestone = find(id);
-        // Only the award's principal investigator may submit evidence for its milestones.
-        assertOwningPrincipalInvestigator(milestone.getAwardId());
         if (milestone.getStatus() != MilestoneStatus.UPCOMING) {
-            throw new BusinessException("Only an UPCOMING milestone can submit evidence (current: " + milestone.getStatus() + ")");
+            throw new BusinessException("Only a milestone awaiting verification can be verified (current: " + milestone.getStatus() + ")");
         }
-        boolean hasDocument = document != null && !document.isEmpty();
-        if (Boolean.TRUE.equals(milestone.getEvidenceRequired()) && !hasDocument) {
-            throw new BusinessException("This milestone requires a supporting evidence document");
+        // Sequential order: earlier milestones must be fully disbursed first.
+        assertPreviousMilestonesDisbursed(milestone);
+        // The milestone's proof is a progress report that Compliance must have APPROVED.
+        ProgressReport report = progressReportRepository.findTopByMilestoneIdOrderByIdDesc(id)
+                .orElseThrow(() -> new BusinessException("No progress report has been submitted for this milestone yet"));
+        if (!"APPROVED".equals(report.getStatus())) {
+            throw new BusinessException("The milestone's progress report must be approved by the Compliance Officer "
+                    + "before finance verification (report status: " + report.getStatus() + ")");
         }
-        if (hasDocument) {
-            milestone.setEvidenceDocPath(documentStorageService.storeMilestoneEvidence(id, document));
-            milestone.setEvidenceDocName(cleanName(document.getOriginalFilename()));
-        }
-        milestone.setEvidenceNote(note);
-        milestone.setEvidenceSubmittedDate(LocalDate.now());
-        milestone.setEvidenceReviewComment(null); // clear any prior rejection reason on resubmission
-        milestone.setStatus(MilestoneStatus.EVIDENCE_SUBMITTED);
-        return mapper.toResponse(milestoneRepository.save(milestone));
-    }
-
-    @Override
-    @Transactional
-    @Auditable(action = "REJECT_MILESTONE_EVIDENCE", entityType = "DisbursementMilestone")
-    public MilestoneResponse rejectEvidence(Long id, String reason) {
-        DisbursementMilestone milestone = find(id);
-        if (milestone.getStatus() != MilestoneStatus.EVIDENCE_SUBMITTED) {
-            throw new BusinessException("Only EVIDENCE_SUBMITTED evidence can be returned (current: " + milestone.getStatus() + ")");
-        }
-        milestone.setStatus(MilestoneStatus.UPCOMING);
-        milestone.setEvidenceReviewComment(reason);
+        milestone.setStatus(MilestoneStatus.COMPLETED);
         DisbursementMilestone saved = milestoneRepository.save(milestone);
-        notifyPrincipalInvestigator(milestone,
-                "Evidence for milestone " + milestone.getMilestoneNumber() + " was returned for resubmission."
-                        + (StringUtils.hasText(reason) ? " Reason: " + reason : ""));
-        return mapper.toResponse(saved);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public EvidenceDocument downloadEvidence(Long id) {
-        DisbursementMilestone milestone = find(id);
-        assertCanReadAward(milestone.getAwardId());
-        if (milestone.getEvidenceDocPath() == null) {
-            throw new ResourceNotFoundException("Evidence document", id);
-        }
-        Resource resource = documentStorageService.load(milestone.getEvidenceDocPath());
-        String filename = milestone.getEvidenceDocName() != null ? milestone.getEvidenceDocName() : "evidence";
-        return new EvidenceDocument(resource, filename);
-    }
-
-    @Override
-    @Transactional
-    @Auditable(action = "APPROVE_MILESTONE", entityType = "DisbursementMilestone")
-    public MilestoneResponse approve(Long id) {
-        DisbursementMilestone milestone = find(id);
-        if (milestone.getStatus() != MilestoneStatus.EVIDENCE_SUBMITTED) {
-            throw new BusinessException("Only an EVIDENCE_SUBMITTED milestone can be approved (current: " + milestone.getStatus() + ")");
-        }
-        milestone.setStatus(MilestoneStatus.APPROVED);
-        DisbursementMilestone saved = milestoneRepository.save(milestone);
-        try {
-            awardRepository.findById(milestone.getAwardId()).ifPresent(award -> {
-                applicationRepository.findById(award.getApplicationId()).ifPresent(app -> {
-                    notificationService.notify(app.getPrincipalInvestigatorId(),
-                        "Your milestone " + milestone.getMilestoneNumber() + " has been approved.",
-                        NotificationCategory.DISBURSEMENT);
-                });
-            });
-        } catch (Exception e) {
-            log.warn("Failed to send milestone approval notification", e);
-        }
-        return mapper.toResponse(saved);
+        notifyPrincipalInvestigator(saved, "Milestone " + saved.getMilestoneNumber()
+                + " has been verified by the finance officer and is ready for fund release.");
+        return toResponse(saved);
     }
 
     @Override
@@ -231,14 +176,16 @@ public class DisbursementMilestoneServiceImpl implements DisbursementMilestoneSe
     @Auditable(action = "RELEASE_FUNDS", entityType = "FundDisbursement")
     public FundDisbursementResponse release(Long id, ReleaseFundsRequest request) {
         DisbursementMilestone milestone = find(id);
-        if (milestone.getStatus() != MilestoneStatus.APPROVED) {
-            throw new BusinessException("Only an APPROVED milestone can be released (current: " + milestone.getStatus() + ")");
+        if (milestone.getStatus() != MilestoneStatus.COMPLETED) {
+            throw new BusinessException("Only a COMPLETED (finance-verified) milestone can be released (current: " + milestone.getStatus() + ")");
         }
+        // Defensive: preserve sequential order at release time too.
+        assertPreviousMilestonesDisbursed(milestone);
         FundDisbursement disbursement = FundDisbursement.builder()
                 .milestone(milestone)
                 .awardId(milestone.getAwardId())
                 .amount(milestone.getAmount())
-                .disbursedDate(request != null && request.releaseDate() != null ? request.releaseDate() : LocalDate.now())
+                .disbursedDate(request != null && request.releaseDate() != null ? request.releaseDate() : java.time.LocalDate.now())
                 .receivingAccountRef(request != null ? request.receivingAccountRef() : null)
                 .paymentReference(request != null ? request.paymentReference() : null)
                 .status(DisbursementStatus.RELEASED)
@@ -247,13 +194,12 @@ public class DisbursementMilestoneServiceImpl implements DisbursementMilestoneSe
         milestone.setStatus(MilestoneStatus.DISBURSED);
         milestoneRepository.save(milestone);
         try {
-            awardRepository.findById(milestone.getAwardId()).ifPresent(award -> {
-                applicationRepository.findById(award.getApplicationId()).ifPresent(app -> {
-                    notificationService.notify(app.getPrincipalInvestigatorId(), 
-                        "Funds for milestone " + milestone.getMilestoneNumber() + " have been disbursed. Amount: " + milestone.getAmount(), 
-                        com.granttrack.notification.entity.NotificationCategory.DISBURSEMENT);
-                });
-            });
+            awardRepository.findById(milestone.getAwardId()).ifPresent(award ->
+                    applicationRepository.findById(award.getApplicationId()).ifPresent(app ->
+                            notificationService.notify(app.getPrincipalInvestigatorId(),
+                                    "Funds for milestone " + milestone.getMilestoneNumber()
+                                            + " have been disbursed. Amount: " + milestone.getAmount(),
+                                    NotificationCategory.DISBURSEMENT)));
         } catch (Exception e) {
             log.warn("Failed to send disbursement notification", e);
         }
@@ -265,8 +211,51 @@ public class DisbursementMilestoneServiceImpl implements DisbursementMilestoneSe
                 .orElseThrow(() -> new ResourceNotFoundException("DisbursementMilestone", id));
     }
 
-    private String cleanName(String raw) {
-        return raw == null ? null : StringUtils.cleanPath(raw);
+    /** Map to the response DTO, computing the display status from the milestone + its linked report. */
+    private MilestoneResponse toResponse(DisbursementMilestone milestone) {
+        return mapper.toResponse(milestone, deriveStatus(milestone));
+    }
+
+    /**
+     * The status shown to clients. Stored milestone state is UPCOMING/COMPLETED/DISBURSED; the review
+     * sub-states are derived from the linked progress report so the UI reflects the live review stage.
+     */
+    private String deriveStatus(DisbursementMilestone m) {
+        switch (m.getStatus()) {
+            case DISBURSED:
+                return "DISBURSED";
+            case COMPLETED:
+                return "COMPLETED";
+            case APPROVED:            // legacy evidence flow
+                return "AWAITING_FINANCE_VERIFICATION";
+            case EVIDENCE_SUBMITTED:  // legacy evidence flow
+                return "UNDER_REVIEW";
+            default:
+                break;                // UPCOMING / UNDER_REVIEW / OVERDUE → derive from the report
+        }
+        if (m.getId() == null) {
+            return "UPCOMING";
+        }
+        return progressReportRepository.findTopByMilestoneIdOrderByIdDesc(m.getId())
+                .map(r -> switch (r.getStatus() == null ? "" : r.getStatus()) {
+                    case "SUBMITTED" -> "UNDER_REVIEW";
+                    case "APPROVED" -> "AWAITING_FINANCE_VERIFICATION";
+                    case "REVISION_REQUESTED" -> "REVISION_REQUESTED";
+                    default -> "UPCOMING";   // DRAFT or not yet submitted
+                })
+                .orElse("UPCOMING");
+    }
+
+    /** Block acting on a milestone while an earlier one (lower number) is not yet DISBURSED. */
+    private void assertPreviousMilestonesDisbursed(DisbursementMilestone m) {
+        if (m.getMilestoneNumber() == null) {
+            return;
+        }
+        long pending = milestoneRepository.countByAwardIdAndMilestoneNumberLessThanAndStatusNot(
+                m.getAwardId(), m.getMilestoneNumber(), MilestoneStatus.DISBURSED);
+        if (pending > 0) {
+            throw new BusinessException("Earlier milestones must be completed and disbursed before this one can proceed");
+        }
     }
 
     /** Notify the award's principal investigator (best-effort; never breaks the operation). */

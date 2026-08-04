@@ -16,7 +16,6 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
-import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
@@ -118,46 +117,17 @@ class DisbursementControllerTest {
     }
 
     @Test
-    void submitEvidence_Success() throws Exception {
-        MilestoneResponse response = MilestoneResponse.builder().id(1L).build();
-        MockMultipartFile file = new MockMultipartFile("file", "evidence.pdf", "application/pdf", "data".getBytes());
-
-        when(milestoneService.submitEvidence(eq(1L), any(), any())).thenReturn(response);
-
-        mockMvc.perform(multipart("/api/v1/disbursements/milestones/1/submit-evidence")
-                        .file(file)
-                        .param("note", "Completed"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true));
-
-        verify(milestoneService, times(1)).submitEvidence(eq(1L), any(), any());
-    }
-
-    @Test
-    void rejectEvidence_Success() throws Exception {
+    void verifyMilestone_Success() throws Exception {
         MilestoneResponse response = MilestoneResponse.builder().id(1L).build();
 
-        when(milestoneService.rejectEvidence(eq(1L), any())).thenReturn(response);
+        when(milestoneService.verify(1L)).thenReturn(response);
 
-        mockMvc.perform(post("/api/v1/disbursements/milestones/1/reject-evidence")
-                        .param("reason", "Insufficient evidence"))
+        mockMvc.perform(post("/api/v1/disbursements/milestones/1/verify"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true));
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.id").value(1));
 
-        verify(milestoneService, times(1)).rejectEvidence(eq(1L), any());
-    }
-
-    @Test
-    void approve_Success() throws Exception {
-        MilestoneResponse response = MilestoneResponse.builder().id(1L).build();
-
-        when(milestoneService.approve(1L)).thenReturn(response);
-
-        mockMvc.perform(post("/api/v1/disbursements/milestones/1/approve"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true));
-
-        verify(milestoneService, times(1)).approve(1L);
+        verify(milestoneService, times(1)).verify(1L);
     }
 
     @Test

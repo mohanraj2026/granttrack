@@ -52,10 +52,15 @@ export type AwardDecision = 'FULL_AWARD' | 'REDUCED_AWARD' | 'RESERVE_LIST' | 'R
 export type AwardStatus = 'ACTIVE' | 'SUSPENDED' | 'COMPLETED' | 'TERMINATED';
 export type MilestoneStatus =
   | 'UPCOMING'
-  | 'EVIDENCE_SUBMITTED'
-  | 'APPROVED'
+  | 'UNDER_REVIEW'
+  | 'AWAITING_FINANCE_VERIFICATION'
+  | 'REVISION_REQUESTED'
+  | 'COMPLETED'
   | 'DISBURSED'
-  | 'OVERDUE';
+  | 'OVERDUE'
+  // legacy states from the previous evidence flow (older rows)
+  | 'EVIDENCE_SUBMITTED'
+  | 'APPROVED';
 export type DisbursementStatus = 'PENDING' | 'RELEASED' | 'FAILED';
 export type ProgressStatus = 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'REVISION_REQUESTED';
 export type DeliverableType =

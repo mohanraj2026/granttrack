@@ -11,6 +11,9 @@ granttrack:
       secret: Y3JhbnRUcmFja1N1cGVyU2VjcmV0S2V5Rm9ySldUU2lnbmluZzEyMzQ1Njc4OTA=
   bootstrap:
     admin-password: Admin@12345
+  # Absolute, launch-independent upload dir shared by all file-serving services (see core-service note).
+  storage:
+    upload-dir: C:/Users/2506457/Downloads/GT_project/GT_project/Backend/uploads
 
 logging:
   level:

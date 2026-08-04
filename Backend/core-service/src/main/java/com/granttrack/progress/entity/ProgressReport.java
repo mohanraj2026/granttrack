@@ -35,6 +35,13 @@ public class ProgressReport extends BaseEntity {
     @Column(name = "award_id", nullable = false)
     private Long awardId;
 
+    /**
+     * The disbursement milestone this report is the proof for (nullable — a periodic report
+     * may be filed without being tied to a specific milestone). Owned/read by finance-service.
+     */
+    @Column(name = "milestone_id")
+    private Long milestoneId;
+
     @Column(name = "period", length = 50)
     private String period;
 

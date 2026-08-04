@@ -9,6 +9,7 @@ import java.time.Instant;
 public record ProgressReportResponse(
         Long id,
         Long awardId,
+        Long milestoneId,
         String period,
         String summary,
         String keyAchievements,

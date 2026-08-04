@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, FormsModule, Validators } from '@angular/forms';
 import { DisbursementService } from '../disbursements.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -45,6 +46,7 @@ export class MilestoneSchedulerComponent implements OnInit {
   private awardApi = inject(AwardService);
   private fb = inject(FormBuilder);
   private toast = inject(ToastService);
+  private router = inject(Router);
 
   protected readonly Role = Role;
 
@@ -64,13 +66,7 @@ export class MilestoneSchedulerComponent implements OnInit {
   readonly modalTitle = computed(() => (this.editingId() ? 'Edit Milestone' : 'Create Milestone'));
   readonly releaseModalOpen = signal(false);
   readonly releaseTarget = signal<MilestoneResponse | null>(null);
-
-  // Evidence submission (researcher) + finance review
-  readonly evidenceModalOpen = signal(false);
-  readonly evidenceTarget = signal<MilestoneResponse | null>(null);
-  readonly evidenceFile = signal<File | null>(null);
-  readonly reviewModalOpen = signal(false);
-  readonly reviewTarget = signal<MilestoneResponse | null>(null);
+  readonly verifyingId = signal<number | null>(null);
 
   readonly timelineMode = computed(() => this.awardId() !== null && this.awardId()! > 0);
 
@@ -88,7 +84,7 @@ export class MilestoneSchedulerComponent implements OnInit {
     {
       key: 'status',
       label: 'Status',
-      options: ['UPCOMING', 'EVIDENCE_SUBMITTED', 'APPROVED', 'DISBURSED', 'OVERDUE'].map((s) => ({
+      options: ['UPCOMING', 'UNDER_REVIEW', 'AWAITING_FINANCE_VERIFICATION', 'REVISION_REQUESTED', 'COMPLETED', 'DISBURSED'].map((s) => ({
         value: s,
         label: s.replace(/_/g, ' '),
       })),
@@ -108,14 +104,6 @@ export class MilestoneSchedulerComponent implements OnInit {
     receivingAccountRef: ['', [Validators.required]],
     paymentReference: ['', [Validators.required]],
     releaseDate: [new Date().toISOString().slice(0, 10), [Validators.required]],
-  });
-
-  readonly evidenceForm = this.fb.nonNullable.group({
-    note: ['', [Validators.required]],
-  });
-
-  readonly reviewForm = this.fb.nonNullable.group({
-    comment: [''],
   });
 
   ngOnInit(): void {
@@ -222,75 +210,47 @@ export class MilestoneSchedulerComponent implements OnInit {
     }
   }
 
-  // ---- Evidence submission (researcher) ----
-  openEvidence(m: MilestoneResponse): void {
-    this.evidenceTarget.set(m);
-    this.evidenceFile.set(null);
-    this.evidenceForm.reset({ note: '' });
-    this.evidenceModalOpen.set(true);
+  // ---- Milestone proof = progress report ----
+
+  /** Milestones are completed in order: a milestone is locked until every earlier one is DISBURSED. */
+  isLocked(m: MilestoneResponse): boolean {
+    return this.rows().some(
+      (other) => other.awardId === m.awardId
+        && (other.milestoneNumber ?? 0) < (m.milestoneNumber ?? 0)
+        && other.status !== 'DISBURSED',
+    );
   }
 
-  onEvidenceFile(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    this.evidenceFile.set(input.files && input.files.length ? input.files[0] : null);
-  }
-
-  confirmSubmitEvidence(): void {
-    const m = this.evidenceTarget();
-    if (!m) return;
-    if (this.evidenceForm.invalid) { this.evidenceForm.markAllAsTouched(); return; }
-    if (m.evidenceRequired && !this.evidenceFile()) {
-      this.toast.error('This milestone requires a supporting document.');
+  /** Researcher: open the progress-report form pre-linked to this milestone. */
+  submitProgressReport(m: MilestoneResponse): void {
+    if (this.isLocked(m)) {
+      this.toast.error('Complete the earlier milestone first — milestones are processed in order.');
       return;
     }
-    this.saving.set(true);
-    this.api.submitEvidence(m.id, this.evidenceForm.getRawValue().note, this.evidenceFile()).subscribe({
+    this.router.navigate(['/progress/reports'], {
+      queryParams: { awardId: m.awardId, milestoneId: m.id, new: 1 },
+    });
+  }
+
+  /** View the progress report(s) for this milestone's award (incl. the Compliance Officer's decision). */
+  viewReport(m: MilestoneResponse): void {
+    this.router.navigate(['/progress/reports'], { queryParams: { awardId: m.awardId } });
+  }
+
+  /** Finance: verify a milestone whose progress report Compliance has approved. */
+  verify(m: MilestoneResponse): void {
+    if (this.isLocked(m)) {
+      this.toast.error('Earlier milestones must be disbursed first.');
+      return;
+    }
+    this.verifyingId.set(m.id);
+    this.api.verify(m.id).subscribe({
       next: () => {
-        this.toast.success('Evidence submitted for finance approval.');
-        this.evidenceModalOpen.set(false);
-        this.saving.set(false);
+        this.toast.success('Milestone verified. You can now release the funds.');
+        this.verifyingId.set(null);
         this.load();
       },
-      error: () => this.saving.set(false),
-    });
-  }
-
-  // ---- Finance review (approve / return) ----
-  openReview(m: MilestoneResponse): void {
-    this.reviewTarget.set(m);
-    this.reviewForm.reset({ comment: '' });
-    this.reviewModalOpen.set(true);
-  }
-
-  approve(m: MilestoneResponse): void {
-    this.api.approveMilestone(m.id).subscribe(() => {
-      this.toast.success('Milestone approved. It can now be released.');
-      this.reviewModalOpen.set(false);
-      this.load();
-    });
-  }
-
-  rejectEvidence(m: MilestoneResponse): void {
-    const reason = this.reviewForm.getRawValue().comment;
-    if (!reason || !reason.trim()) {
-      this.toast.error('Please give a reason so the researcher knows what to fix.');
-      return;
-    }
-    this.api.rejectEvidence(m.id, reason).subscribe(() => {
-      this.toast.success('Evidence returned to the researcher for resubmission.');
-      this.reviewModalOpen.set(false);
-      this.load();
-    });
-  }
-
-  downloadEvidence(m: MilestoneResponse): void {
-    this.api.downloadEvidence(m.id).subscribe((blob) => {
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = m.evidenceDocName || `milestone-${m.milestoneNumber}-evidence`;
-      a.click();
-      URL.revokeObjectURL(url);
+      error: () => this.verifyingId.set(null),
     });
   }
 

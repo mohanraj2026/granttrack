@@ -12,6 +12,12 @@ granttrack:
     admin-password: Admin@12345
   internal:
     token: gt-internal-dev-token
+  # Absolute upload dir so file storage/retrieval is independent of how the service is launched
+  # (IDE run vs. `mvn spring-boot:run` use different working directories). All file-serving services
+  # point at this ONE shared folder so every document (abstracts, evidence, reports, ...) resolves.
+  # Change this path if you clone the repo elsewhere.
+  storage:
+    upload-dir: C:/Users/2506457/Downloads/GT_project/GT_project/Backend/uploads
 
 logging:
   level:

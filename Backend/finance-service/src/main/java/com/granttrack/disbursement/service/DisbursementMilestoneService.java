@@ -5,10 +5,8 @@ import com.granttrack.disbursement.dto.request.MilestoneUpdateRequest;
 import com.granttrack.disbursement.dto.request.ReleaseFundsRequest;
 import com.granttrack.disbursement.dto.response.FundDisbursementResponse;
 import com.granttrack.disbursement.dto.response.MilestoneResponse;
-import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.web.multipart.MultipartFile;
 
 public interface DisbursementMilestoneService {
     MilestoneResponse create(MilestoneRequest request);
@@ -16,18 +14,13 @@ public interface DisbursementMilestoneService {
     MilestoneResponse getById(Long id);
     Page<MilestoneResponse> search(Long awardId, String status, Pageable pageable);
 
-    /** Researcher (owning PI) submits a completion note and optional supporting document. */
-    MilestoneResponse submitEvidence(Long id, String note, MultipartFile document);
+    /**
+     * Finance verifies a milestone whose linked progress report has been APPROVED by the Compliance
+     * Officer. Enforces sequential order (earlier milestones must be disbursed). Moves the milestone
+     * to COMPLETED, from which funds can be released.
+     */
+    MilestoneResponse verify(Long id);
 
-    /** Finance returns unsatisfactory evidence to the researcher for resubmission, with a reason. */
-    MilestoneResponse rejectEvidence(Long id, String reason);
-
-    MilestoneResponse approve(Long id);
+    /** Release funds for a COMPLETED (finance-verified) milestone (creates a fund disbursement). */
     FundDisbursementResponse release(Long id, ReleaseFundsRequest request);
-
-    /** Download the milestone's evidence document (read-scoped). */
-    EvidenceDocument downloadEvidence(Long id);
-
-    record EvidenceDocument(Resource resource, String filename) {
-    }
 }

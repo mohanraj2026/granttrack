@@ -226,7 +226,7 @@ public class GrantApplicationServiceImpl implements GrantApplicationService {
     @Transactional(readOnly = true)
     public AbstractDocument downloadAbstract(Long id) {
         GrantApplication application = find(id);
-        assertCanRead(application);
+        assertCanReadAbstractDocument(application);
         if (!StringUtils.hasText(application.getAbstractDocPath())) {
             throw new ResourceNotFoundException("No abstract document uploaded for application " + id);
         }
@@ -267,6 +267,29 @@ public class GrantApplicationServiceImpl implements GrantApplicationService {
         if (currentUserId == null || !currentUserId.equals(application.getPrincipalInvestigatorId())) {
             throw new AccessDeniedException("You do not have access to this application");
         }
+    }
+
+    /**
+     * Read access to the abstract <em>document</em>. Same as {@link #assertCanRead} (staff + owning PI),
+     * but additionally allows a reviewer who is assigned to this application — a blind reviewer needs the
+     * abstract document to score it. Access stays assignment-scoped (identical to the {@code /blind}
+     * projection), so a reviewer can only download documents for applications actually assigned to them.
+     */
+    private void assertCanReadAbstractDocument(GrantApplication application) {
+        if (SecurityUtils.hasAnyRole("ROLE_GRANT_ADMIN", "ROLE_ADMIN",
+                "ROLE_FINANCE_OFFICER", "ROLE_COMPLIANCE_OFFICER")) {
+            return;
+        }
+        Long currentUserId = SecurityUtils.getCurrentUserId().orElse(null);
+        if (currentUserId != null) {
+            if (currentUserId.equals(application.getPrincipalInvestigatorId())) {
+                return; // the owning principal investigator
+            }
+            if (assignmentRepository.existsByApplicationIdAndReviewerId(application.getId(), currentUserId)) {
+                return; // a reviewer assigned to this application (blind review)
+            }
+        }
+        throw new AccessDeniedException("You do not have access to this application's document");
     }
 
     /** Loads a call and ensures it exists and is OPEN for submissions; returns it for further checks. */

@@ -11,9 +11,9 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface DisbursementMapper {
 
-    @Mapping(target = "status", expression = "java(milestone.getStatus().name())")
+    @Mapping(target = "status", source = "displayStatus")
     @Mapping(target = "hasEvidenceDocument", expression = "java(milestone.getEvidenceDocPath() != null)")
-    MilestoneResponse toResponse(DisbursementMilestone milestone);
+    MilestoneResponse toResponse(DisbursementMilestone milestone, String displayStatus);
 
     @Mapping(target = "milestoneId", source = "milestone.id")
     @Mapping(target = "milestoneDescription", source = "milestone.description")

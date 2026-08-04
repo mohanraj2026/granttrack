@@ -33,31 +33,12 @@ export class DisbursementService {
   updateMilestone(id: number, body: MilestoneUpdateRequest): Observable<ApiResponse<MilestoneResponse>> {
     return this.http.put<ApiResponse<MilestoneResponse>>(`${this.base}/milestones/${id}`, body);
   }
-  submitEvidence(id: number, note: string, file: File | null): Observable<ApiResponse<MilestoneResponse>> {
-    const form = new FormData();
-    if (file) form.append('file', file);
-    const params = note ? toHttpParams({ note }) : undefined;
+  /** Finance verifies a milestone whose progress report was approved by Compliance (-> COMPLETED). */
+  verify(id: number): Observable<ApiResponse<MilestoneResponse>> {
     return this.http.post<ApiResponse<MilestoneResponse>>(
-      `${this.base}/milestones/${id}/submit-evidence`,
-      form,
-      { params },
-    );
-  }
-  approveMilestone(id: number): Observable<ApiResponse<MilestoneResponse>> {
-    return this.http.post<ApiResponse<MilestoneResponse>>(
-      `${this.base}/milestones/${id}/approve`,
+      `${this.base}/milestones/${id}/verify`,
       null,
     );
-  }
-  rejectEvidence(id: number, reason: string): Observable<ApiResponse<MilestoneResponse>> {
-    return this.http.post<ApiResponse<MilestoneResponse>>(
-      `${this.base}/milestones/${id}/reject-evidence`,
-      null,
-      { params: toHttpParams({ reason }) },
-    );
-  }
-  downloadEvidence(id: number): Observable<Blob> {
-    return this.http.get(`${this.base}/milestones/${id}/evidence-document`, { responseType: 'blob' });
   }
   release(id: number, body: ReleaseFundsRequest): Observable<ApiResponse<FundDisbursementResponse>> {
     return this.http.post<ApiResponse<FundDisbursementResponse>>(
