@@ -22,7 +22,8 @@ export interface UserResponse {
 export interface AdminCreateUserRequest {
   name: string;
   email: string;
-  phone?: string;
+  /** Exactly 10 digits — see phoneValidators. */
+  phone: string;
   institutionId?: number;
   department?: string;
   role: string;
@@ -33,7 +34,8 @@ export interface AdminCreateUserRequest {
 export interface AdminUpdateUserRequest {
   name: string;
   email: string;
-  phone?: string;
+  /** Exactly 10 digits — see phoneValidators. */
+  phone: string;
   institutionId?: number;
   department?: string;
 }

@@ -7,8 +7,8 @@ import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2026-08-04T17:06:15+0530",
-    comments = "version: 1.6.3, compiler: Eclipse JDT (IDE) 3.46.100.v20260624-0231, environment: Java 21.0.11 (Eclipse Adoptium)"
+    date = "2026-08-06T11:07:41+0530",
+    comments = "version: 1.6.3, compiler: javac, environment: Java 21.0.2 (Oracle Corporation)"
 )
 @Component
 public class AwardMapperImpl implements AwardMapper {
@@ -21,16 +21,16 @@ public class AwardMapperImpl implements AwardMapper {
 
         GrantAwardResponse.GrantAwardResponseBuilder grantAwardResponse = GrantAwardResponse.builder();
 
+        grantAwardResponse.id( award.getId() );
         grantAwardResponse.applicationId( award.getApplicationId() );
-        grantAwardResponse.awardLetterDate( award.getAwardLetterDate() );
         grantAwardResponse.awardedAmount( award.getAwardedAmount() );
-        grantAwardResponse.conditionsRef( award.getConditionsRef() );
-        grantAwardResponse.createdAt( award.getCreatedAt() );
+        grantAwardResponse.startDate( award.getStartDate() );
         grantAwardResponse.endDate( award.getEndDate() );
+        grantAwardResponse.conditionsRef( award.getConditionsRef() );
+        grantAwardResponse.awardLetterDate( award.getAwardLetterDate() );
         grantAwardResponse.financeOfficerId( award.getFinanceOfficerId() );
         grantAwardResponse.financeReviewComment( award.getFinanceReviewComment() );
-        grantAwardResponse.id( award.getId() );
-        grantAwardResponse.startDate( award.getStartDate() );
+        grantAwardResponse.createdAt( award.getCreatedAt() );
         grantAwardResponse.updatedAt( award.getUpdatedAt() );
 
         grantAwardResponse.status( award.getStatus().name() );

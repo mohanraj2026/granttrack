@@ -22,6 +22,8 @@ import { IconComponent } from '../../shared/components/icon/icon.component';
 import { DropdownMenuComponent } from '../../shared/components/dropdown-menu/dropdown-menu.component';
 import { FundingService } from '../funding/funding.service';
 import { InstitutionResponse } from '../../core/models/funding.model';
+import { PhoneInputDirective } from '../../shared/directives/phone-input.directive';
+import { phoneErrorMessage, phoneValidators } from '../../core/validators/phone.validators';
 
 type UserRow = UserResponse & { rolesText: string };
 
@@ -32,7 +34,7 @@ type UserRow = UserResponse & { rolesText: string };
   imports: [
     CommonModule, ReactiveFormsModule, PageHeaderComponent, DataTableComponent,
     PaginatorComponent, SearchFilterBarComponent, ModalComponent, IconComponent,
-    DropdownMenuComponent
+    DropdownMenuComponent, PhoneInputDirective
   ],
   templateUrl: './user-admin.component.html',
   styleUrl: './user-admin.component.scss',
@@ -99,7 +101,7 @@ export class UserAdminComponent implements OnInit {
   readonly form = this.fb.nonNullable.group({
     name: ['', [Validators.required, Validators.maxLength(150)]],
     email: ['', [Validators.required, Validators.email]],
-    phone: [''],
+    phone: ['', phoneValidators],
     institutionSearch: [''],
     institutionId: [null as number | null],
     department: [''],
@@ -112,7 +114,7 @@ export class UserAdminComponent implements OnInit {
   readonly editForm = this.fb.nonNullable.group({
     name: ['', [Validators.required, Validators.maxLength(150)]],
     email: ['', [Validators.required, Validators.email]],
-    phone: [''],
+    phone: ['', phoneValidators],
     institutionSearch: [''],
     institutionId: [null as number | null],
     department: [''],
@@ -167,7 +169,7 @@ export class UserAdminComponent implements OnInit {
     this.api.createUser({
       name: v.name,
       email: v.email,
-      phone: v.phone || undefined,
+      phone: v.phone,
       institutionId: v.institutionId ?? undefined,
       department: v.department || undefined,
       role: v.role,
@@ -215,7 +217,7 @@ export class UserAdminComponent implements OnInit {
     this.api.updateUser(u.id, {
       name: v.name,
       email: v.email,
-      phone: v.phone || undefined,
+      phone: v.phone,
       institutionId: v.institutionId ?? undefined,
       department: v.department || undefined,
     }).subscribe({
@@ -274,4 +276,8 @@ export class UserAdminComponent implements OnInit {
     const c = this.form.get(ctrl);
     return !!c && c.invalid && c.touched;
   }
+
+  phoneError(): string | null { return phoneErrorMessage(this.form.get('phone')); }
+
+  editPhoneError(): string | null { return phoneErrorMessage(this.editForm.get('phone')); }
 }

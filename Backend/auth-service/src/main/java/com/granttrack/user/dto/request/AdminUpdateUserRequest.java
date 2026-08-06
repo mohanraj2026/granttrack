@@ -2,6 +2,7 @@ package com.granttrack.user.dto.request;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 /**
@@ -17,7 +18,8 @@ public record AdminUpdateUserRequest(
         @NotBlank @Email @Size(max = 180)
         String email,
 
-        @Size(max = 20)
+        @NotBlank(message = "Phone number is required")
+        @Pattern(regexp = "\\d{10}", message = "Phone number must be exactly 10 digits")
         String phone,
 
         Long institutionId,

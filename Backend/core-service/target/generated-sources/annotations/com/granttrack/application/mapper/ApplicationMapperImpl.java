@@ -11,8 +11,8 @@ import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2026-08-04T17:06:15+0530",
-    comments = "version: 1.6.3, compiler: Eclipse JDT (IDE) 3.46.100.v20260624-0231, environment: Java 21.0.11 (Eclipse Adoptium)"
+    date = "2026-08-06T11:07:41+0530",
+    comments = "version: 1.6.3, compiler: javac, environment: Java 21.0.2 (Oracle Corporation)"
 )
 @Component
 public class ApplicationMapperImpl implements ApplicationMapper {
@@ -25,19 +25,19 @@ public class ApplicationMapperImpl implements ApplicationMapper {
 
         GrantApplicationResponse.GrantApplicationResponseBuilder grantApplicationResponse = GrantApplicationResponse.builder();
 
-        grantApplicationResponse.abstractDocName( application.getAbstractDocName() );
-        grantApplicationResponse.abstractDocPath( application.getAbstractDocPath() );
-        grantApplicationResponse.callId( application.getCallId() );
-        grantApplicationResponse.createdAt( application.getCreatedAt() );
-        grantApplicationResponse.discipline( application.getDiscipline() );
         grantApplicationResponse.id( application.getId() );
-        grantApplicationResponse.institutionId( application.getInstitutionId() );
+        grantApplicationResponse.callId( application.getCallId() );
         grantApplicationResponse.principalInvestigatorId( application.getPrincipalInvestigatorId() );
-        grantApplicationResponse.projectDurationMonths( application.getProjectDurationMonths() );
         grantApplicationResponse.projectTitle( application.getProjectTitle() );
-        grantApplicationResponse.requestedAmount( application.getRequestedAmount() );
         grantApplicationResponse.researchAbstract( application.getResearchAbstract() );
+        grantApplicationResponse.discipline( application.getDiscipline() );
+        grantApplicationResponse.requestedAmount( application.getRequestedAmount() );
+        grantApplicationResponse.projectDurationMonths( application.getProjectDurationMonths() );
+        grantApplicationResponse.institutionId( application.getInstitutionId() );
         grantApplicationResponse.submissionDate( application.getSubmissionDate() );
+        grantApplicationResponse.abstractDocPath( application.getAbstractDocPath() );
+        grantApplicationResponse.abstractDocName( application.getAbstractDocName() );
+        grantApplicationResponse.createdAt( application.getCreatedAt() );
         grantApplicationResponse.updatedAt( application.getUpdatedAt() );
 
         grantApplicationResponse.status( application.getStatus().name() );
@@ -54,12 +54,12 @@ public class ApplicationMapperImpl implements ApplicationMapper {
         CoInvestigatorResponse.CoInvestigatorResponseBuilder coInvestigatorResponse = CoInvestigatorResponse.builder();
 
         coInvestigatorResponse.applicationId( coInvestigatorApplicationId( coInvestigator ) );
+        coInvestigatorResponse.id( coInvestigator.getId() );
+        coInvestigatorResponse.userId( coInvestigator.getUserId() );
+        coInvestigatorResponse.institutionId( coInvestigator.getInstitutionId() );
         coInvestigatorResponse.contribution( coInvestigator.getContribution() );
         coInvestigatorResponse.createdAt( coInvestigator.getCreatedAt() );
-        coInvestigatorResponse.id( coInvestigator.getId() );
-        coInvestigatorResponse.institutionId( coInvestigator.getInstitutionId() );
         coInvestigatorResponse.updatedAt( coInvestigator.getUpdatedAt() );
-        coInvestigatorResponse.userId( coInvestigator.getUserId() );
 
         coInvestigatorResponse.role( coInvestigator.getRole().name() );
         coInvestigatorResponse.status( coInvestigator.getStatus().name() );
@@ -76,10 +76,10 @@ public class ApplicationMapperImpl implements ApplicationMapper {
         ApplicationBudgetResponse.ApplicationBudgetResponseBuilder applicationBudgetResponse = ApplicationBudgetResponse.builder();
 
         applicationBudgetResponse.applicationId( budgetApplicationId( budget ) );
-        applicationBudgetResponse.amount( budget.getAmount() );
-        applicationBudgetResponse.createdAt( budget.getCreatedAt() );
         applicationBudgetResponse.id( budget.getId() );
+        applicationBudgetResponse.amount( budget.getAmount() );
         applicationBudgetResponse.justification( budget.getJustification() );
+        applicationBudgetResponse.createdAt( budget.getCreatedAt() );
         applicationBudgetResponse.updatedAt( budget.getUpdatedAt() );
 
         applicationBudgetResponse.budgetHead( budget.getBudgetHead().name() );

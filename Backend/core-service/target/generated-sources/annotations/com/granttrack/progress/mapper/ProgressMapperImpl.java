@@ -9,8 +9,8 @@ import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2026-08-04T17:06:16+0530",
-    comments = "version: 1.6.3, compiler: Eclipse JDT (IDE) 3.46.100.v20260624-0231, environment: Java 21.0.11 (Eclipse Adoptium)"
+    date = "2026-08-06T11:07:41+0530",
+    comments = "version: 1.6.3, compiler: javac, environment: Java 21.0.2 (Oracle Corporation)"
 )
 @Component
 public class ProgressMapperImpl implements ProgressMapper {
@@ -23,19 +23,19 @@ public class ProgressMapperImpl implements ProgressMapper {
 
         ProgressReportResponse.ProgressReportResponseBuilder progressReportResponse = ProgressReportResponse.builder();
 
-        progressReportResponse.awardId( report.getAwardId() );
-        progressReportResponse.budgetUtilisationPercent( report.getBudgetUtilisationPercent() );
-        progressReportResponse.challenges( report.getChallenges() );
-        progressReportResponse.createdAt( report.getCreatedAt() );
         progressReportResponse.id( report.getId() );
-        progressReportResponse.keyAchievements( report.getKeyAchievements() );
+        progressReportResponse.awardId( report.getAwardId() );
         progressReportResponse.milestoneId( report.getMilestoneId() );
         progressReportResponse.period( report.getPeriod() );
-        progressReportResponse.reportDocName( report.getReportDocName() );
-        progressReportResponse.reviewComment( report.getReviewComment() );
+        progressReportResponse.summary( report.getSummary() );
+        progressReportResponse.keyAchievements( report.getKeyAchievements() );
+        progressReportResponse.challenges( report.getChallenges() );
+        progressReportResponse.budgetUtilisationPercent( report.getBudgetUtilisationPercent() );
         progressReportResponse.submittedById( report.getSubmittedById() );
         progressReportResponse.submittedDate( report.getSubmittedDate() );
-        progressReportResponse.summary( report.getSummary() );
+        progressReportResponse.reportDocName( report.getReportDocName() );
+        progressReportResponse.reviewComment( report.getReviewComment() );
+        progressReportResponse.createdAt( report.getCreatedAt() );
         progressReportResponse.updatedAt( report.getUpdatedAt() );
 
         progressReportResponse.status( report.getStatus().name() );
@@ -52,15 +52,15 @@ public class ProgressMapperImpl implements ProgressMapper {
 
         DeliverableResponse.DeliverableResponseBuilder deliverableResponse = DeliverableResponse.builder();
 
-        deliverableResponse.awardId( deliverable.getAwardId() );
-        deliverableResponse.createdAt( deliverable.getCreatedAt() );
-        deliverableResponse.dueDate( deliverable.getDueDate() );
-        deliverableResponse.fileName( deliverable.getFileName() );
-        deliverableResponse.filePath( deliverable.getFilePath() );
         deliverableResponse.id( deliverable.getId() );
-        deliverableResponse.reviewComment( deliverable.getReviewComment() );
-        deliverableResponse.submittedDate( deliverable.getSubmittedDate() );
+        deliverableResponse.awardId( deliverable.getAwardId() );
         deliverableResponse.title( deliverable.getTitle() );
+        deliverableResponse.dueDate( deliverable.getDueDate() );
+        deliverableResponse.submittedDate( deliverable.getSubmittedDate() );
+        deliverableResponse.filePath( deliverable.getFilePath() );
+        deliverableResponse.fileName( deliverable.getFileName() );
+        deliverableResponse.reviewComment( deliverable.getReviewComment() );
+        deliverableResponse.createdAt( deliverable.getCreatedAt() );
         deliverableResponse.updatedAt( deliverable.getUpdatedAt() );
 
         deliverableResponse.type( deliverable.getType().name() );

@@ -9,7 +9,8 @@ export interface RegisterRequest {
   name: string;
   email: string;
   password: string;
-  phone?: string;
+  /** Exactly 10 digits — see phoneValidators. */
+  phone: string;
   countryCode?: string;
   institutionId?: number;
   department?: string;

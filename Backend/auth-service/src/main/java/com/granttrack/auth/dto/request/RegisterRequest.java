@@ -2,6 +2,7 @@ package com.granttrack.auth.dto.request;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 /**
@@ -20,7 +21,8 @@ public record RegisterRequest(
         @NotBlank @Size(min = 8, max = 72)
         String password,
 
-        @Size(max = 20)
+        @NotBlank(message = "Mobile number is required")
+        @Pattern(regexp = "\\d{10}", message = "Mobile number must be exactly 10 digits")
         String phone,
 
         String countryCode,

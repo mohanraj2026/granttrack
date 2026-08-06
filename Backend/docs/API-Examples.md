@@ -23,7 +23,7 @@ mvn spring-boot:run          # needs MySQL 8 on localhost:3306
   "name": "Dr. Ada Researcher",
   "email": "ada@uni.edu",
   "password": "Secret@123",
-  "phone": "+44 20 7946 0000",
+  "phone": "9010000005",
   "institutionId": 1,
   "department": "Computer Science",
   "roles": ["ROLE_RESEARCHER"]

@@ -7,12 +7,14 @@ import { FundingService } from '../../funding/funding.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { InstitutionResponse } from '../../../core/models/funding.model';
 import { IconComponent } from '../../../shared/components/icon/icon.component';
+import { PhoneInputDirective } from '../../../shared/directives/phone-input.directive';
+import { phoneErrorMessage, phoneValidators } from '../../../core/validators/phone.validators';
 
 @Component({
   selector: 'gt-register',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, IconComponent],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, IconComponent, PhoneInputDirective],
   templateUrl: './register.component.html',
 })
 export class RegisterComponent {
@@ -33,7 +35,7 @@ export class RegisterComponent {
     password: ['', [Validators.required, Validators.minLength(8)]],
     confirmPassword: ['', [Validators.required]],
     countryCode: ['+91'],
-    phone: [''],
+    phone: ['', phoneValidators],
     institutionSearch: [''],
     institutionId: [null as number | null, [Validators.required]],
     department: [''],
@@ -77,7 +79,7 @@ export class RegisterComponent {
         name: v.name,
         email: v.email,
         password: v.password,
-        phone: v.phone || undefined,
+        phone: v.phone,
         countryCode: v.countryCode || undefined,
         institutionId: v.institutionId ?? undefined,
         department: v.department || undefined,
@@ -96,4 +98,6 @@ export class RegisterComponent {
     const c = this.form.get(ctrl);
     return !!c && c.invalid && c.touched;
   }
+
+  phoneError(): string | null { return phoneErrorMessage(this.form.get('phone')); }
 }

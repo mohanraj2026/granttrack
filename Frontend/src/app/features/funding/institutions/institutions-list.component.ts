@@ -13,6 +13,8 @@ import { ModalComponent } from '../../../shared/components/modal/modal.component
 import { FundingTabsComponent } from '../funding-tabs.component';
 import { DropdownMenuComponent } from '../../../shared/components/dropdown-menu/dropdown-menu.component';
 import { IconComponent } from '../../../shared/components/icon/icon.component';
+import { PhoneInputDirective } from '../../../shared/directives/phone-input.directive';
+import { phoneErrorMessage, phoneValidators } from '../../../core/validators/phone.validators';
 
 @Component({
   selector: 'gt-institutions-list',
@@ -20,7 +22,8 @@ import { IconComponent } from '../../../shared/components/icon/icon.component';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule, ReactiveFormsModule, PageHeaderComponent, DataTableComponent,
-    PaginatorComponent, SearchFilterBarComponent, ModalComponent, FundingTabsComponent, DropdownMenuComponent, IconComponent
+    PaginatorComponent, SearchFilterBarComponent, ModalComponent, FundingTabsComponent, DropdownMenuComponent, IconComponent,
+    PhoneInputDirective
   ],
   template: `
     <gt-funding-tabs />
@@ -140,15 +143,16 @@ import { IconComponent } from '../../../shared/components/icon/icon.component';
         <section class="border rounded-3 p-3 p-md-4 mb-1">
           <div class="d-flex align-items-center gap-2 mb-3">
             <span class="d-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary rounded-3" style="width:34px;height:34px;"><gt-icon name="bell" [size]="17" /></span>
-            <div><div class="fw-semibold text-dark lh-1">Contact</div><div class="text-secondary" style="font-size:.8rem;">Optional point of contact.</div></div>
+            <div><div class="fw-semibold text-dark lh-1">Contact</div><div class="text-secondary" style="font-size:.8rem;">Point of contact for this institution.</div></div>
           </div>
           <div class="row g-3">
             <div class="col-md-6">
-              <label class="form-label" for="mobileNumberInput">Mobile number</label>
-              <div class="input-group gt-input">
+              <label class="form-label" for="mobileNumberInput">Mobile number <span class="text-danger">*</span></label>
+              <div class="input-group gt-input" [class.is-invalid]="invalid('mobileNumber')">
                 <span class="input-group-text"><gt-icon name="bell" [size]="16" /></span>
-                <input type="tel" class="form-control py-2" formControlName="mobileNumber" id="mobileNumberInput" placeholder="+91 98765 43210" />
+                <input type="tel" gtPhoneInput class="form-control py-2" formControlName="mobileNumber" id="mobileNumberInput" [class.is-invalid]="invalid('mobileNumber')" placeholder="9876543210" />
               </div>
+              @if (phoneError(); as message) { <div class="d-flex align-items-center gap-1 text-danger small mt-1"><gt-icon name="alert-triangle" [size]="13" /> {{ message }}</div> }
             </div>
             <div class="col-md-6">
               <label class="form-label" for="emailInput">Email</label>
@@ -201,7 +205,7 @@ export class InstitutionsListComponent implements OnInit {
     city: ['', [Validators.required]],
     state: ['', [Validators.required]],
     pincode: ['', [Validators.required]],
-    mobileNumber: [''],
+    mobileNumber: ['', phoneValidators],
     email: ['', [Validators.email]],
   });
 
@@ -243,7 +247,7 @@ export class InstitutionsListComponent implements OnInit {
       name: v.name, type: v.type, country: v.country,
       universityName: v.universityName, address: v.address,
       city: v.city, state: v.state, pincode: v.pincode,
-      mobileNumber: v.mobileNumber || undefined, email: v.email || undefined
+      mobileNumber: v.mobileNumber, email: v.email || undefined
     };
     this.saving.set(true);
     const id = this.editingId();
@@ -263,4 +267,6 @@ export class InstitutionsListComponent implements OnInit {
     const c = this.form.get(ctrl);
     return !!c && c.invalid && c.touched;
   }
+
+  phoneError(): string | null { return phoneErrorMessage(this.form.get('mobileNumber')); }
 }

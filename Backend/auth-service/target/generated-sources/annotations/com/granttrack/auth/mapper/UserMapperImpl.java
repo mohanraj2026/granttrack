@@ -7,8 +7,8 @@ import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2026-08-04T17:06:09+0530",
-    comments = "version: 1.6.3, compiler: Eclipse JDT (IDE) 3.46.100.v20260624-0231, environment: Java 21.0.11 (Eclipse Adoptium)"
+    date = "2026-08-06T11:07:35+0530",
+    comments = "version: 1.6.3, compiler: javac, environment: Java 21.0.2 (Oracle Corporation)"
 )
 @Component
 public class UserMapperImpl implements UserMapper {
@@ -22,17 +22,17 @@ public class UserMapperImpl implements UserMapper {
         UserResponse.UserResponseBuilder userResponse = UserResponse.builder();
 
         userResponse.roles( rolesToNames( user.getRoles() ) );
-        userResponse.collegeIdPath( user.getCollegeIdPath() );
+        userResponse.id( user.getId() );
+        userResponse.name( user.getName() );
+        userResponse.email( user.getEmail() );
+        userResponse.phone( user.getPhone() );
         userResponse.countryCode( user.getCountryCode() );
-        userResponse.createdAt( user.getCreatedAt() );
+        userResponse.institutionId( user.getInstitutionId() );
         userResponse.department( user.getDepartment() );
         userResponse.education( user.getEducation() );
-        userResponse.email( user.getEmail() );
-        userResponse.id( user.getId() );
-        userResponse.institutionId( user.getInstitutionId() );
-        userResponse.name( user.getName() );
-        userResponse.phone( user.getPhone() );
+        userResponse.collegeIdPath( user.getCollegeIdPath() );
         userResponse.profilePhotoPath( user.getProfilePhotoPath() );
+        userResponse.createdAt( user.getCreatedAt() );
         userResponse.updatedAt( user.getUpdatedAt() );
 
         userResponse.status( user.getStatus().name() );

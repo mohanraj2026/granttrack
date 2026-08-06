@@ -17,7 +17,7 @@ granttrack:
   # point at this ONE shared folder so every document (abstracts, evidence, reports, ...) resolves.
   # Change this path if you clone the repo elsewhere.
   storage:
-    upload-dir: C:/Users/2506457/Downloads/GT_project/GT_project/Backend/uploads
+    upload-dir: C:/Users/2506642/Downloads/GT_project/GT_project/Backend/uploads
 
 logging:
   level:

@@ -28,7 +28,8 @@ export interface InstitutionRequest {
   city: string;
   state: string;
   pincode: string;
-  mobileNumber?: string;
+  /** Exactly 10 digits — see phoneValidators. */
+  mobileNumber: string;
   email?: string;
 }
 export interface InstitutionResponse {

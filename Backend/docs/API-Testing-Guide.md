@@ -142,7 +142,7 @@ curl -s -X POST http://localhost:8088/api/v1/auth/login \
 `POST {BASE}/auth/register`
 ```json
 { "name": "Dr. Ada Researcher", "email": "ada@uni.edu", "password": "Secret@123",
-  "phone": "+44 20 7946 0000", "institutionId": 1, "department": "Computer Science",
+  "phone": "9010000005", "institutionId": 1, "department": "Computer Science",
   "roles": ["ROLE_RESEARCHER"] }
 ```
 **Capture:** **PI_ID = 2**

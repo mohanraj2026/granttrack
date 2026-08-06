@@ -13,6 +13,8 @@ import { ModalComponent } from '../../../shared/components/modal/modal.component
 import { FundingTabsComponent } from '../funding-tabs.component';
 import { DropdownMenuComponent } from '../../../shared/components/dropdown-menu/dropdown-menu.component';
 import { IconComponent } from '../../../shared/components/icon/icon.component';
+import { PhoneInputDirective } from '../../../shared/directives/phone-input.directive';
+import { phoneErrorMessage, phoneValidators } from '../../../core/validators/phone.validators';
 
 @Component({
   selector: 'gt-sponsors-list',
@@ -20,7 +22,8 @@ import { IconComponent } from '../../../shared/components/icon/icon.component';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule, ReactiveFormsModule, PageHeaderComponent, DataTableComponent,
-    PaginatorComponent, SearchFilterBarComponent, ModalComponent, FundingTabsComponent, DropdownMenuComponent, IconComponent
+    PaginatorComponent, SearchFilterBarComponent, ModalComponent, FundingTabsComponent, DropdownMenuComponent, IconComponent,
+    PhoneInputDirective
   ],
   template: `
     <gt-funding-tabs />
@@ -93,9 +96,9 @@ import { IconComponent } from '../../../shared/components/icon/icon.component';
             <label class="form-label" for="phoneInput">Phone <span class="text-danger">*</span></label>
             <div class="input-group gt-input" [class.is-invalid]="invalid('phone')">
               <span class="input-group-text"><gt-icon name="bell" [size]="16" /></span>
-              <input type="tel" class="form-control py-2" formControlName="phone" id="phoneInput" [class.is-invalid]="invalid('phone')" placeholder="+91 98765 43210" />
+              <input type="tel" gtPhoneInput class="form-control py-2" formControlName="phone" id="phoneInput" [class.is-invalid]="invalid('phone')" placeholder="9876543210" />
             </div>
-            @if (invalid('phone')) { <div class="d-flex align-items-center gap-1 text-danger small mt-1"><gt-icon name="alert-triangle" [size]="13" /> Phone is required.</div> }
+            @if (phoneError(); as message) { <div class="d-flex align-items-center gap-1 text-danger small mt-1"><gt-icon name="alert-triangle" [size]="13" /> {{ message }}</div> }
           </div>
           <div class="col-md-6">
             <label class="form-label" for="websiteInput">Website <span class="text-danger">*</span></label>
@@ -153,7 +156,7 @@ export class SponsorsListComponent implements OnInit {
     name: ['', [Validators.required]],
     type: ['', [Validators.required]],
     contactEmail: ['', [Validators.required, Validators.email]],
-    phone: ['', [Validators.required]],
+    phone: ['', phoneValidators],
     address: ['', [Validators.required]],
     website: ['', [Validators.required]],
   });
@@ -212,4 +215,6 @@ export class SponsorsListComponent implements OnInit {
     const c = this.form.get(ctrl);
     return !!c && c.invalid && c.touched;
   }
+
+  phoneError(): string | null { return phoneErrorMessage(this.form.get('phone')); }
 }
