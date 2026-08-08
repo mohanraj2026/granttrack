@@ -10,6 +10,7 @@ import {
   CoInvestigatorResponse,
   GrantApplicationRequest,
   GrantApplicationResponse,
+  MyInvitationResponse,
 } from '../../core/models/application.model';
 import { toHttpParams } from '../../core/utils/http-params.util';
 
@@ -53,6 +54,10 @@ export class ApplicationsService {
   }
   removeCoInvestigator(appId: number, coiId: number): Observable<ApiResponse<void>> {
     return this.http.delete<ApiResponse<void>>(`${this.base}/${appId}/co-investigators/${coiId}`);
+  }
+  /** Co-investigator invitations addressed to the current user (to accept/decline). */
+  myInvitations(): Observable<ApiResponse<MyInvitationResponse[]>> {
+    return this.http.get<ApiResponse<MyInvitationResponse[]>>(`${this.base}/co-investigators/mine`);
   }
   /** The invited co-investigator accepts or declines their invitation. */
   respondCoInvestigator(

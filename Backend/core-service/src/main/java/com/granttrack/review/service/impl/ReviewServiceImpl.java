@@ -371,8 +371,12 @@ public class ReviewServiceImpl implements ReviewService {
     @Override
     @Transactional(readOnly = true)
     public PanelDecisionResponse getPanelDecision(Long applicationId) {
-        PanelDecision decision = panelDecisionRepository.findByApplicationId(applicationId)
-                .orElseThrow(() -> new ResourceNotFoundException("PanelDecision", applicationId));
+        // "No decision recorded yet" is a normal state (e.g. an application not yet before the panel),
+        // not an error — return null so the UI can show an empty state instead of an error toast.
+        PanelDecision decision = panelDecisionRepository.findByApplicationId(applicationId).orElse(null);
+        if (decision == null) {
+            return null;
+        }
         // Full-pipeline staff (Grant Admin/Admin/Finance/Compliance) may read any decision;
         // a researcher may only read the panel decision for their own application.
         if (!SecurityUtils.hasAnyRole("ROLE_GRANT_ADMIN", "ROLE_ADMIN",

@@ -61,7 +61,7 @@ class SponsorControllerTest {
 
     @Test
     void create_Success() throws Exception {
-        SponsorRequest request = new SponsorRequest("Name", "Type", "email@test.com", "123", "Add", "Web");
+        SponsorRequest request = new SponsorRequest("Name", "Type", "email@test.com", "1234567890", "Add", "Web");
         SponsorResponse response = SponsorResponse.builder().id(1L).name("Name").build();
 
         when(sponsorService.create(any(SponsorRequest.class))).thenReturn(response);
@@ -78,7 +78,7 @@ class SponsorControllerTest {
 
     @Test
     void update_Success() throws Exception {
-        SponsorRequest request = new SponsorRequest("Upd", "Type", "email@test.com", "123", "Add", "Web");
+        SponsorRequest request = new SponsorRequest("Upd", "Type", "email@test.com", "1234567890", "Add", "Web");
         SponsorResponse response = SponsorResponse.builder().id(1L).name("Upd").build();
 
         when(sponsorService.update(eq(1L), any(SponsorRequest.class))).thenReturn(response);

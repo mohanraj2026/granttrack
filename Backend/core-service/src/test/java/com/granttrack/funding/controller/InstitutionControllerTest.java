@@ -60,7 +60,7 @@ class InstitutionControllerTest {
 
     @Test
     void create_Success() throws Exception {
-        InstitutionRequest request = new InstitutionRequest("Name", "Type", "US", "Uni", "Addr", "City", "State", "123", "999", "e@t.com");
+        InstitutionRequest request = new InstitutionRequest("Name", "Type", "US", "Uni", "Addr", "City", "State", "123", "1234567890", "e@t.com");
         InstitutionResponse response = InstitutionResponse.builder().id(1L).name("Name").build();
 
         when(institutionService.create(any(InstitutionRequest.class))).thenReturn(response);
@@ -77,7 +77,7 @@ class InstitutionControllerTest {
 
     @Test
     void update_Success() throws Exception {
-        InstitutionRequest request = new InstitutionRequest("Upd", "Type", "US", "Uni", "Addr", "City", "State", "123", "999", "e@t.com");
+        InstitutionRequest request = new InstitutionRequest("Upd", "Type", "US", "Uni", "Addr", "City", "State", "123", "1234567890", "e@t.com");
         InstitutionResponse response = InstitutionResponse.builder().id(1L).name("Upd").build();
 
         when(institutionService.update(eq(1L), any(InstitutionRequest.class))).thenReturn(response);

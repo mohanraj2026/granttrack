@@ -12,6 +12,7 @@ import com.granttrack.application.repository.CoInvestigatorRepository;
 import com.granttrack.application.repository.GrantApplicationRepository;
 import com.granttrack.common.exception.BusinessException;
 import com.granttrack.common.security.SecurityUtils;
+import com.granttrack.notification.service.NotificationService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -42,6 +43,9 @@ class CoInvestigatorServiceImplTest {
 
     @Mock
     private ApplicationMapper mapper;
+
+    @Mock
+    private NotificationService notificationService;
 
     @InjectMocks
     private CoInvestigatorServiceImpl coInvestigatorService;

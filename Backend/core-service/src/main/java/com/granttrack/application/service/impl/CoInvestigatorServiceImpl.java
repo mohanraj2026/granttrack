@@ -2,6 +2,7 @@ package com.granttrack.application.service.impl;
 
 import com.granttrack.application.dto.request.CoInvestigatorRequest;
 import com.granttrack.application.dto.response.CoInvestigatorResponse;
+import com.granttrack.application.dto.response.MyInvitationResponse;
 import com.granttrack.application.entity.CoInvestigator;
 import com.granttrack.application.entity.CoInvestigatorRole;
 import com.granttrack.application.entity.CoInvestigatorStatus;
@@ -14,6 +15,8 @@ import com.granttrack.application.service.CoInvestigatorService;
 import com.granttrack.common.exception.BusinessException;
 import com.granttrack.common.exception.ResourceNotFoundException;
 import com.granttrack.common.security.SecurityUtils;
+import com.granttrack.notification.entity.NotificationCategory;
+import com.granttrack.notification.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.AccessDeniedException;
@@ -30,6 +33,7 @@ public class CoInvestigatorServiceImpl implements CoInvestigatorService {
     private final CoInvestigatorRepository coInvestigatorRepository;
     private final GrantApplicationRepository applicationRepository;
     private final ApplicationMapper mapper;
+    private final NotificationService notificationService;
 
     @Override
     @Transactional
@@ -49,6 +53,12 @@ public class CoInvestigatorServiceImpl implements CoInvestigatorService {
                 .status(CoInvestigatorStatus.INVITED)
                 .build();
         CoInvestigator saved = coInvestigatorRepository.save(coInvestigator);
+        // Notify the invited existing user so they can accept/decline from their Applications page.
+        if (request.userId() != null) {
+            notifyUser(request.userId(),
+                    "You have been invited as a co-investigator on \"" + application.getProjectTitle()
+                            + "\". Open Applications → Invitations to accept or decline.");
+        }
         log.info("Invited co-investigator {} to application {}", saved.getId(), applicationId);
         return mapper.toResponse(saved);
     }
@@ -72,8 +82,44 @@ public class CoInvestigatorServiceImpl implements CoInvestigatorService {
         }
         coInvestigator.setStatus(parseDecision(decision));
         CoInvestigator saved = coInvestigatorRepository.save(coInvestigator);
+        // Let the principal investigator know the team member responded.
+        GrantApplication application = coInvestigator.getApplication();
+        String outcome = saved.getStatus() == CoInvestigatorStatus.CONFIRMED ? "accepted" : "declined";
+        notifyUser(application.getPrincipalInvestigatorId(),
+                "A team member has " + outcome + " your co-investigator invitation on \""
+                        + application.getProjectTitle() + "\".");
         log.info("Co-investigator {} responded {} on application {}", coiId, saved.getStatus(), applicationId);
         return mapper.toResponse(saved);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<MyInvitationResponse> listMyInvitations() {
+        Long uid = SecurityUtils.getCurrentUserId().orElse(null);
+        if (uid == null) {
+            return List.of();
+        }
+        return coInvestigatorRepository.findByUserId(uid).stream()
+                .map(c -> MyInvitationResponse.builder()
+                        .coInvestigatorId(c.getId())
+                        .applicationId(c.getApplication().getId())
+                        .projectTitle(c.getApplication().getProjectTitle())
+                        .role(c.getRole().name())
+                        .status(c.getStatus().name())
+                        .build())
+                .toList();
+    }
+
+    /** Best-effort notification (never breaks the invite/response operation). */
+    private void notifyUser(Long userId, String message) {
+        if (userId == null) {
+            return;
+        }
+        try {
+            notificationService.notify(userId, message, NotificationCategory.APPLICATION);
+        } catch (Exception e) {
+            log.warn("Failed to send co-investigator notification to user {}", userId, e);
+        }
     }
 
     @Override

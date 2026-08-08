@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: com.granttrack.progress.controller.ProgressReportControllerTest
+-------------------------------------------------------------------------------
+Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.889 s -- in com.granttrack.progress.controller.ProgressReportControllerTest

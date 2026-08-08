@@ -14,6 +14,7 @@ com\granttrack\award\repository\GrantAwardRepository.class
 com\granttrack\progress\dto\response\DeliverableResponse.class
 com\granttrack\progress\entity\DeliverableStatus.class
 com\granttrack\award\entity\AwardStatus.class
+com\granttrack\application\dto\response\MyInvitationResponse.class
 com\granttrack\application\entity\ApplicationBudget.class
 com\granttrack\auth\repository\UserRepository.class
 com\granttrack\output\service\IPRecordService.class
@@ -115,6 +116,7 @@ com\granttrack\output\service\ResearchOutputService.class
 com\granttrack\progress\service\DeliverableService.class
 com\granttrack\auth\entity\Role.class
 com\granttrack\review\dto\response\ReviewerAssignmentResponse$ReviewerAssignmentResponseBuilder.class
+com\granttrack\application\dto\response\MyInvitationResponse$MyInvitationResponseBuilder.class
 com\granttrack\award\controller\GrantAwardController.class
 com\granttrack\review\mapper\ReviewMapper.class
 com\granttrack\funding\dto\response\InstitutionResponse.class

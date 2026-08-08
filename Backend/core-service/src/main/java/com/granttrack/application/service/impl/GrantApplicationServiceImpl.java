@@ -4,8 +4,10 @@ import com.granttrack.application.dto.request.GrantApplicationRequest;
 import com.granttrack.application.dto.response.GrantApplicationResponse;
 import com.granttrack.application.dto.response.BlindApplicationResponse;
 import com.granttrack.application.entity.ApplicationStatus;
+import com.granttrack.application.entity.CoInvestigatorStatus;
 import com.granttrack.application.entity.GrantApplication;
 import com.granttrack.application.mapper.ApplicationMapper;
+import com.granttrack.application.repository.CoInvestigatorRepository;
 import com.granttrack.application.repository.GrantApplicationRepository;
 import com.granttrack.application.service.DocumentStorageService;
 import com.granttrack.application.service.GrantApplicationService;
@@ -45,6 +47,7 @@ public class GrantApplicationServiceImpl implements GrantApplicationService {
     private final GrantApplicationRepository applicationRepository;
     private final GrantCallRepository callRepository;
     private final ReviewerAssignmentRepository assignmentRepository;
+    private final CoInvestigatorRepository coInvestigatorRepository;
     private final ApplicationMapper mapper;
     private final DocumentStorageService documentStorage;
     private final NotificationService notificationService;
@@ -129,18 +132,32 @@ public class GrantApplicationServiceImpl implements GrantApplicationService {
         // Researchers may only see their own applications; Grant Admins / Admins see the full pipeline.
         boolean privileged = SecurityUtils.hasAnyRole("ROLE_GRANT_ADMIN", "ROLE_ADMIN");
         Long currentUserId = SecurityUtils.getCurrentUserId().orElse(null);
+        Long uid = currentUserId == null ? -1L : currentUserId;
+        // Applications the caller is a CONFIRMED co-investigator on — they are part of the team and may see them.
+        List<Long> coInvestigatorAppIds = privileged
+                ? List.of()
+                : coInvestigatorRepository.findApplicationIdsByUserIdAndStatus(uid, CoInvestigatorStatus.CONFIRMED);
         Specification<GrantApplication> spec = (root, cq, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
             if (!privileged) {
-                // Non-privileged callers are scoped to applications they own (as PI).
-                predicates.add(cb.equal(root.get("principalInvestigatorId"),
-                        currentUserId == null ? -1L : currentUserId));
+                // Non-privileged callers see applications they own (as PI) or are a confirmed team member on.
+                Predicate ownPi = cb.equal(root.get("principalInvestigatorId"), uid);
+                predicates.add(coInvestigatorAppIds.isEmpty()
+                        ? ownPi
+                        : cb.or(ownPi, root.get("id").in(coInvestigatorAppIds)));
             }
             if (StringUtils.hasText(q)) {
                 predicates.add(cb.like(cb.lower(root.get("projectTitle")), "%" + q.toLowerCase() + "%"));
             }
             if (StringUtils.hasText(status)) {
-                predicates.add(cb.equal(root.get("status"), parseStatus(status)));
+                // A comma-separated value ("SUBMITTED,UNDER_REVIEW") becomes an IN filter; a single value an equals.
+                List<ApplicationStatus> wanted = java.util.Arrays.stream(status.split(","))
+                        .map(String::trim).filter(StringUtils::hasText).map(this::parseStatus).toList();
+                if (wanted.size() == 1) {
+                    predicates.add(cb.equal(root.get("status"), wanted.get(0)));
+                } else if (!wanted.isEmpty()) {
+                    predicates.add(root.get("status").in(wanted));
+                }
             }
             if (callId != null) {
                 predicates.add(cb.equal(root.get("callId"), callId));
@@ -264,9 +281,17 @@ public class GrantApplicationServiceImpl implements GrantApplicationService {
             return;
         }
         Long currentUserId = SecurityUtils.getCurrentUserId().orElse(null);
-        if (currentUserId == null || !currentUserId.equals(application.getPrincipalInvestigatorId())) {
-            throw new AccessDeniedException("You do not have access to this application");
+        if (currentUserId != null) {
+            if (currentUserId.equals(application.getPrincipalInvestigatorId())) {
+                return; // the owning principal investigator
+            }
+            // A confirmed co-investigator is part of the team and may see the application + its process.
+            if (coInvestigatorRepository.existsByApplicationIdAndUserIdAndStatus(
+                    application.getId(), currentUserId, CoInvestigatorStatus.CONFIRMED)) {
+                return;
+            }
         }
+        throw new AccessDeniedException("You do not have access to this application");
     }
 
     /**

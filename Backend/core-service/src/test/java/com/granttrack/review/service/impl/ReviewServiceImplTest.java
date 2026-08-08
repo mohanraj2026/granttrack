@@ -4,7 +4,6 @@ import com.granttrack.application.entity.ApplicationStatus;
 import com.granttrack.application.entity.GrantApplication;
 import com.granttrack.common.exception.BusinessException;
 import com.granttrack.common.exception.DuplicateResourceException;
-import com.granttrack.common.exception.ResourceNotFoundException;
 import com.granttrack.common.security.SecurityUtils;
 import com.granttrack.funding.entity.CallStatus;
 import com.granttrack.funding.entity.GrantCall;
@@ -540,9 +539,10 @@ class ReviewServiceImplTest {
     }
 
     @Test
-    void getPanelDecision_NotFound_ThrowsException() {
+    void getPanelDecision_NotFound_ReturnsNull() {
+        // "No decision yet" is a normal state (not an error) so the UI shows an empty state, not a toast.
         when(panelDecisionRepository.findByApplicationId(1L)).thenReturn(Optional.empty());
 
-        assertThrows(ResourceNotFoundException.class, () -> reviewService.getPanelDecision(1L));
+        assertNull(reviewService.getPanelDecision(1L));
     }
 }

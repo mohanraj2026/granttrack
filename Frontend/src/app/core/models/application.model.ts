@@ -60,6 +60,15 @@ export interface CoInvestigatorResponse {
   status: CoInvestigatorStatus;
 }
 
+/** A co-investigator invitation addressed to the current user (with the application's title). */
+export interface MyInvitationResponse {
+  coInvestigatorId: number;
+  applicationId: number;
+  projectTitle: string;
+  role: string;
+  status: string;
+}
+
 export interface ApplicationBudgetRequest {
   budgetHead: BudgetHead;
   amount: number;

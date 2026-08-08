@@ -38,9 +38,11 @@
             </button>
           }
           <ng-container *gtHasRole="[Role.GRANT_ADMIN, Role.ADMIN]">
-            <button class="dropdown-item py-2" (click)="approve(row)">
-              <gt-icon name="check-circle" [size]="16" class="me-2 text-success" /> Approve
-            </button>
+            @if (!row.awardLetterDate) {
+              <button class="dropdown-item py-2" (click)="approve(row)">
+                <gt-icon name="check-circle" [size]="16" class="me-2 text-success" /> Approve
+              </button>
+            }
             <button class="dropdown-item py-2" (click)="openTerms(row)">
               <gt-icon name="edit" [size]="16" class="me-2 text-warning" /> Edit Terms
             </button>

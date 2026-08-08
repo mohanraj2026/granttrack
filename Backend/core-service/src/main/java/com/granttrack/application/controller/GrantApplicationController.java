@@ -86,10 +86,14 @@ public class GrantApplicationController {
     public ResponseEntity<ApiResponse<PageResponse<GrantApplicationResponse>>> search(
             @RequestParam(required = false) String q,
             @RequestParam(required = false) String status,
+            @RequestParam(required = false) String statuses,
             @RequestParam(required = false) Long callId,
             @PageableDefault(size = 20, sort = "createdAt") Pageable pageable) {
+        // Accept either a single `status` or a comma-separated `statuses` (e.g. "SUBMITTED,UNDER_REVIEW");
+        // `statuses` wins when both are present. The service treats a comma-separated value as an IN filter.
+        String effectiveStatus = (statuses != null && !statuses.isBlank()) ? statuses : status;
         return ResponseEntity.ok(ApiResponse.success(
-                PageResponse.from(applicationService.search(q, status, callId, pageable))));
+                PageResponse.from(applicationService.search(q, effectiveStatus, callId, pageable))));
     }
 
     @PostMapping("/{id}/submit")
@@ -113,6 +117,13 @@ public class GrantApplicationController {
             @PathVariable Long id, @RequestParam String status) {
         return ResponseEntity.ok(ApiResponse.success("Application status updated",
                 applicationService.changeStatus(id, status)));
+    }
+
+    @GetMapping("/co-investigators/mine")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "List co-investigator invitations addressed to the current user (to accept/decline)")
+    public ResponseEntity<ApiResponse<java.util.List<com.granttrack.application.dto.response.MyInvitationResponse>>> myInvitations() {
+        return ResponseEntity.ok(ApiResponse.success(coInvestigatorService.listMyInvitations()));
     }
 
     @PostMapping("/{id}/co-investigators")

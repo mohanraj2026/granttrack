@@ -56,6 +56,9 @@ class GrantApplicationServiceImplTest {
     private ReviewerAssignmentRepository assignmentRepository;
 
     @Mock
+    private com.granttrack.application.repository.CoInvestigatorRepository coInvestigatorRepository;
+
+    @Mock
     private ApplicationMapper mapper;
 
     @Mock
