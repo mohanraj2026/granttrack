@@ -9,8 +9,8 @@ import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2026-08-08T13:42:54+0530",
-    comments = "version: 1.6.3, compiler: javac, environment: Java 21.0.2 (Oracle Corporation)"
+    date = "2026-08-08T18:32:52+0530",
+    comments = "version: 1.6.3, compiler: Eclipse JDT (IDE) 3.46.100.v20260624-0231, environment: Java 21.0.11 (Eclipse Adoptium)"
 )
 @Component
 public class OutputMapperImpl implements OutputMapper {
@@ -23,15 +23,15 @@ public class OutputMapperImpl implements OutputMapper {
 
         ResearchOutputResponse.ResearchOutputResponseBuilder researchOutputResponse = ResearchOutputResponse.builder();
 
-        researchOutputResponse.id( output.getId() );
-        researchOutputResponse.awardId( output.getAwardId() );
-        researchOutputResponse.title( output.getTitle() );
         researchOutputResponse.authors( output.getAuthors() );
-        researchOutputResponse.publicationVenue( output.getPublicationVenue() );
-        researchOutputResponse.doi( output.getDoi() );
-        researchOutputResponse.publishedDate( output.getPublishedDate() );
-        researchOutputResponse.openAccessCompliant( output.getOpenAccessCompliant() );
+        researchOutputResponse.awardId( output.getAwardId() );
         researchOutputResponse.createdAt( output.getCreatedAt() );
+        researchOutputResponse.doi( output.getDoi() );
+        researchOutputResponse.id( output.getId() );
+        researchOutputResponse.openAccessCompliant( output.getOpenAccessCompliant() );
+        researchOutputResponse.publicationVenue( output.getPublicationVenue() );
+        researchOutputResponse.publishedDate( output.getPublishedDate() );
+        researchOutputResponse.title( output.getTitle() );
         researchOutputResponse.updatedAt( output.getUpdatedAt() );
 
         researchOutputResponse.type( output.getType().name() );
@@ -48,14 +48,14 @@ public class OutputMapperImpl implements OutputMapper {
 
         IPRecordResponse.IPRecordResponseBuilder iPRecordResponse = IPRecordResponse.builder();
 
-        iPRecordResponse.id( record.getId() );
         iPRecordResponse.awardId( record.getAwardId() );
-        iPRecordResponse.title( record.getTitle() );
-        iPRecordResponse.inventors( record.getInventors() );
+        iPRecordResponse.createdAt( record.getCreatedAt() );
         iPRecordResponse.filingDate( record.getFilingDate() );
         iPRecordResponse.grantDate( record.getGrantDate() );
+        iPRecordResponse.id( record.getId() );
+        iPRecordResponse.inventors( record.getInventors() );
         iPRecordResponse.ownershipPercent( record.getOwnershipPercent() );
-        iPRecordResponse.createdAt( record.getCreatedAt() );
+        iPRecordResponse.title( record.getTitle() );
         iPRecordResponse.updatedAt( record.getUpdatedAt() );
 
         iPRecordResponse.ipType( record.getIpType().name() );
