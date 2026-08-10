@@ -1,7 +1,6 @@
 package com.granttrack.auth.service.impl;
 
 import com.granttrack.auth.dto.request.ChangePasswordRequest;
-import com.granttrack.auth.dto.request.ForgotPasswordRequest;
 import com.granttrack.auth.dto.request.LoginRequest;
 import com.granttrack.auth.dto.request.RefreshTokenRequest;
 import com.granttrack.auth.dto.request.RegisterRequest;
@@ -143,19 +142,6 @@ public class AuthServiceImpl implements AuthService {
         userRepository.save(user);
         refreshTokenRepository.revokeAllForUser(userId);
         log.info("Password changed for user id={}", userId);
-    }
-
-    @Override
-    @Transactional
-    public void forgotPassword(ForgotPasswordRequest request) {
-        // Phase-1 structure only: generate a reset token. Email delivery is out of scope (§9).
-        userRepository.findByEmail(request.email()).ifPresent(user -> {
-            String resetToken = UUID.randomUUID().toString();
-            log.info("Password reset requested for user id={}; reset token {} generated (delivery deferred)",
-                    user.getId(), resetToken);
-            // A production implementation would persist the reset token with an expiry and dispatch it.
-        });
-        // Always succeed silently to avoid user enumeration.
     }
 
     private AuthResponse issueTokens(CustomUserDetails principal) {

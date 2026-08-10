@@ -71,7 +71,7 @@ class UserControllerTest {
     @Test
     void createUser_Success() throws Exception {
         mockPrincipal();
-        AdminCreateUserRequest request = new AdminCreateUserRequest("New Reviewer", "rev@test.com", "123", "password123", 1L, "Dept", "ROLE_REVIEWER");
+        AdminCreateUserRequest request = new AdminCreateUserRequest("New Reviewer", "rev@test.com", "1234567890", "password123", 1L, "Dept", "ROLE_REVIEWER");
         UserResponse userResponse = UserResponse.builder().id(2L).email("rev@test.com").build();
         CreatedUserResponse createdUserResponse = CreatedUserResponse.builder().user(userResponse).build();
 

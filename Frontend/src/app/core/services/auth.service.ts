@@ -6,7 +6,6 @@ import { ApiResponse } from '../models/api-response.model';
 import {
   AuthResponse,
   ChangePasswordRequest,
-  ForgotPasswordRequest,
   LoginRequest,
   RegisterRequest,
 } from '../models/auth.model';
@@ -52,10 +51,6 @@ export class AuthService {
 
   changePassword(payload: ChangePasswordRequest): Observable<ApiResponse<void>> {
     return this.http.post<ApiResponse<void>>(`${this.base}/change-password`, payload);
-  }
-
-  forgotPassword(payload: ForgotPasswordRequest): Observable<ApiResponse<void>> {
-    return this.http.post<ApiResponse<void>>(`${this.base}/forgot-password`, payload);
   }
 
   logout(): Observable<ApiResponse<void>> | null {

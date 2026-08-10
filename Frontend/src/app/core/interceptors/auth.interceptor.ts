@@ -12,7 +12,7 @@ import { AuthService } from '../services/auth.service';
 import { TokenStorageService } from '../services/token-storage.service';
 
 /** Endpoints that must NOT receive a bearer token / trigger refresh. */
-const AUTH_BYPASS = ['/auth/login', '/auth/register', '/auth/refresh', '/auth/forgot-password'];
+const AUTH_BYPASS = ['/auth/login', '/auth/register', '/auth/refresh'];
 
 // Shared state so concurrent 401s trigger a single refresh and then replay.
 let isRefreshing = false;

@@ -2,7 +2,6 @@ package com.granttrack.auth.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.granttrack.auth.dto.request.ChangePasswordRequest;
-import com.granttrack.auth.dto.request.ForgotPasswordRequest;
 import com.granttrack.auth.dto.request.LoginRequest;
 import com.granttrack.auth.dto.request.RefreshTokenRequest;
 import com.granttrack.auth.dto.request.RegisterRequest;
@@ -60,7 +59,7 @@ class AuthControllerTest {
 
     @Test
     void register_Success() throws Exception {
-        RegisterRequest request = new RegisterRequest("Test User", "test@test.com", "password123", "12345", "+1", 1L, "Dept", "PhD");
+        RegisterRequest request = new RegisterRequest("Test User", "test@test.com", "password123", "1234567890", "+1", 1L, "Dept", "PhD");
         UserResponse response = UserResponse.builder().id(1L).email("test@test.com").name("Test User").build();
 
         MockMultipartFile requestPart = new MockMultipartFile("request", "", "application/json", objectMapper.writeValueAsBytes(request));
@@ -142,19 +141,6 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.success").value(true));
 
         verify(authService, times(1)).changePassword(eq(1L), any(ChangePasswordRequest.class));
-    }
-
-    @Test
-    void forgotPassword_Success() throws Exception {
-        ForgotPasswordRequest request = new ForgotPasswordRequest("test@test.com");
-
-        mockMvc.perform(post("/api/v1/auth/forgot-password")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true));
-
-        verify(authService, times(1)).forgotPassword(any(ForgotPasswordRequest.class));
     }
 }
 

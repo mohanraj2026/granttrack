@@ -34,13 +34,6 @@ export const routes: Routes = [
       import('./features/auth/staff-login/staff-login.component').then((m) => m.StaffLoginComponent),
   },
   {
-    path: 'forgot-password',
-    loadComponent: () =>
-      import('./features/auth/forgot-password/forgot-password.component').then(
-        (m) => m.ForgotPasswordComponent,
-      ),
-  },
-  {
     path: '',
     loadComponent: () =>
       import('./layout/main-layout/main-layout.component').then((m) => m.MainLayoutComponent),

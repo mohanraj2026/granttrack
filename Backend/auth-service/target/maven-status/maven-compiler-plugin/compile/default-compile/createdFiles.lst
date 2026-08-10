@@ -1,4 +1,3 @@
-com\granttrack\auth\dto\request\ForgotPasswordRequest.class
 com\granttrack\auth\security\JwtTokenProvider.class
 com\granttrack\auth\dto\response\UserResponse.class
 com\granttrack\auth\dto\request\RefreshTokenRequest.class

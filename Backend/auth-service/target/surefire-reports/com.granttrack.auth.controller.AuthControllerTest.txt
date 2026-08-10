@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: com.granttrack.auth.controller.AuthControllerTest
+-------------------------------------------------------------------------------
+Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 8.190 s -- in com.granttrack.auth.controller.AuthControllerTest

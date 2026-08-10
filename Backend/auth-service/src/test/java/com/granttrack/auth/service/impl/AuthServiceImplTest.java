@@ -2,7 +2,6 @@ package com.granttrack.auth.service.impl;
 
 import com.granttrack.auth.service.DocumentStorageService;
 import com.granttrack.auth.dto.request.ChangePasswordRequest;
-import com.granttrack.auth.dto.request.ForgotPasswordRequest;
 import com.granttrack.auth.dto.request.LoginRequest;
 import com.granttrack.auth.dto.request.RefreshTokenRequest;
 import com.granttrack.auth.dto.request.RegisterRequest;
@@ -277,20 +276,5 @@ class AuthServiceImplTest {
         // Act & Assert
         assertThrows(BusinessException.class, () -> authService.changePassword(userId, request));
         verify(userRepository, never()).save(any(User.class));
-    }
-
-    @Test
-    void forgotPassword_Success() {
-        // Arrange
-        ForgotPasswordRequest request = new ForgotPasswordRequest("test@test.com");
-        User user = User.builder().email("test@test.com").build();
-        user.setId(1L);
-        when(userRepository.findByEmail("test@test.com")).thenReturn(Optional.of(user));
-
-        // Act
-        authService.forgotPassword(request);
-
-        // Assert
-        verify(userRepository, times(1)).findByEmail("test@test.com");
     }
 }

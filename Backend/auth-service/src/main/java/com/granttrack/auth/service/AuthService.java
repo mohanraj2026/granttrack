@@ -1,7 +1,6 @@
 package com.granttrack.auth.service;
 
 import com.granttrack.auth.dto.request.ChangePasswordRequest;
-import com.granttrack.auth.dto.request.ForgotPasswordRequest;
 import com.granttrack.auth.dto.request.LoginRequest;
 import com.granttrack.auth.dto.request.RefreshTokenRequest;
 import com.granttrack.auth.dto.request.RegisterRequest;
@@ -20,7 +19,4 @@ public interface AuthService {
     void logout(RefreshTokenRequest request);
 
     void changePassword(Long userId, ChangePasswordRequest request);
-
-    /** Phase-1 stub: generates a reset structure (token) without email delivery. */
-    void forgotPassword(ForgotPasswordRequest request);
 }

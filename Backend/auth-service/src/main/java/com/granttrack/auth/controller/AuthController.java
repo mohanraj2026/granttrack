@@ -1,7 +1,6 @@
 package com.granttrack.auth.controller;
 
 import com.granttrack.auth.dto.request.ChangePasswordRequest;
-import com.granttrack.auth.dto.request.ForgotPasswordRequest;
 import com.granttrack.auth.dto.request.LoginRequest;
 import com.granttrack.auth.dto.request.RefreshTokenRequest;
 import com.granttrack.auth.dto.request.RegisterRequest;
@@ -68,12 +67,5 @@ public class AuthController {
             @Valid @RequestBody ChangePasswordRequest request) {
         authService.changePassword(principal.getId(), request);
         return ResponseEntity.ok(ApiResponse.success("Password changed successfully"));
-    }
-
-    @PostMapping("/forgot-password")
-    @Operation(summary = "Initiate a password reset (Phase-1 structure; no email delivery)")
-    public ResponseEntity<ApiResponse<Void>> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
-        authService.forgotPassword(request);
-        return ResponseEntity.ok(ApiResponse.success("If the email exists, a reset has been initiated"));
     }
 }
