@@ -59,7 +59,7 @@ export class InstitutionsListComponent implements OnInit {
     state: ['', [Validators.required]],
     pincode: ['', [Validators.required]],
     mobileNumber: ['', phoneValidators],
-    email: ['', [Validators.email]],
+    email: ['', [Validators.required, Validators.email]],
   });
 
   ngOnInit(): void { this.load(); }

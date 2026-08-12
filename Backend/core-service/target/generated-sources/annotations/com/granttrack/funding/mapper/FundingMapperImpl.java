@@ -14,8 +14,8 @@ import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2026-08-08T18:32:52+0530",
-    comments = "version: 1.6.3, compiler: Eclipse JDT (IDE) 3.46.100.v20260624-0231, environment: Java 21.0.11 (Eclipse Adoptium)"
+    date = "2026-08-12T09:56:54+0530",
+    comments = "version: 1.6.3, compiler: javac, environment: Java 21.0.2 (Oracle Corporation)"
 )
 @Component
 public class FundingMapperImpl implements FundingMapper {
@@ -28,13 +28,13 @@ public class FundingMapperImpl implements FundingMapper {
 
         SponsorResponse.SponsorResponseBuilder sponsorResponse = SponsorResponse.builder();
 
-        sponsorResponse.address( sponsor.getAddress() );
-        sponsorResponse.contactEmail( sponsor.getContactEmail() );
         sponsorResponse.id( sponsor.getId() );
-        sponsorResponse.name( sponsor.getName() );
-        sponsorResponse.phone( sponsor.getPhone() );
         sponsorResponse.sponsorCode( sponsor.getSponsorCode() );
+        sponsorResponse.name( sponsor.getName() );
         sponsorResponse.type( sponsor.getType() );
+        sponsorResponse.contactEmail( sponsor.getContactEmail() );
+        sponsorResponse.phone( sponsor.getPhone() );
+        sponsorResponse.address( sponsor.getAddress() );
         sponsorResponse.website( sponsor.getWebsite() );
 
         return sponsorResponse.build();
@@ -48,19 +48,19 @@ public class FundingMapperImpl implements FundingMapper {
 
         InstitutionResponse.InstitutionResponseBuilder institutionResponse = InstitutionResponse.builder();
 
+        institutionResponse.id( institution.getId() );
+        institutionResponse.name( institution.getName() );
+        institutionResponse.institutionCode( institution.getInstitutionCode() );
+        institutionResponse.type( institution.getType() );
+        institutionResponse.country( institution.getCountry() );
+        institutionResponse.universityName( institution.getUniversityName() );
         institutionResponse.address( institution.getAddress() );
         institutionResponse.city( institution.getCity() );
-        institutionResponse.country( institution.getCountry() );
-        institutionResponse.createdAt( institution.getCreatedAt() );
-        institutionResponse.email( institution.getEmail() );
-        institutionResponse.id( institution.getId() );
-        institutionResponse.institutionCode( institution.getInstitutionCode() );
-        institutionResponse.mobileNumber( institution.getMobileNumber() );
-        institutionResponse.name( institution.getName() );
-        institutionResponse.pincode( institution.getPincode() );
         institutionResponse.state( institution.getState() );
-        institutionResponse.type( institution.getType() );
-        institutionResponse.universityName( institution.getUniversityName() );
+        institutionResponse.pincode( institution.getPincode() );
+        institutionResponse.mobileNumber( institution.getMobileNumber() );
+        institutionResponse.email( institution.getEmail() );
+        institutionResponse.createdAt( institution.getCreatedAt() );
 
         return institutionResponse.build();
     }
@@ -75,20 +75,20 @@ public class FundingMapperImpl implements FundingMapper {
 
         fundingSchemeResponse.sponsorId( schemeSponsorId( scheme ) );
         fundingSchemeResponse.sponsorName( schemeSponsorName( scheme ) );
-        fundingSchemeResponse.category( scheme.getCategory() );
-        fundingSchemeResponse.createdAt( scheme.getCreatedAt() );
-        fundingSchemeResponse.description( scheme.getDescription() );
-        fundingSchemeResponse.documentPath( scheme.getDocumentPath() );
-        fundingSchemeResponse.eligibleApplicants( scheme.getEligibleApplicants() );
-        fundingSchemeResponse.fromDate( scheme.getFromDate() );
-        fundingSchemeResponse.fundingDurationMonths( scheme.getFundingDurationMonths() );
         fundingSchemeResponse.id( scheme.getId() );
-        fundingSchemeResponse.maxAwardAmount( scheme.getMaxAwardAmount() );
-        fundingSchemeResponse.minAwardAmount( scheme.getMinAwardAmount() );
-        fundingSchemeResponse.researchArea( scheme.getResearchArea() );
         fundingSchemeResponse.schemeCode( scheme.getSchemeCode() );
         fundingSchemeResponse.schemeName( scheme.getSchemeName() );
+        fundingSchemeResponse.researchArea( scheme.getResearchArea() );
+        fundingSchemeResponse.category( scheme.getCategory() );
+        fundingSchemeResponse.maxAwardAmount( scheme.getMaxAwardAmount() );
+        fundingSchemeResponse.minAwardAmount( scheme.getMinAwardAmount() );
+        fundingSchemeResponse.eligibleApplicants( scheme.getEligibleApplicants() );
+        fundingSchemeResponse.fundingDurationMonths( scheme.getFundingDurationMonths() );
+        fundingSchemeResponse.fromDate( scheme.getFromDate() );
         fundingSchemeResponse.toDate( scheme.getToDate() );
+        fundingSchemeResponse.description( scheme.getDescription() );
+        fundingSchemeResponse.documentPath( scheme.getDocumentPath() );
+        fundingSchemeResponse.createdAt( scheme.getCreatedAt() );
         fundingSchemeResponse.updatedAt( scheme.getUpdatedAt() );
 
         fundingSchemeResponse.status( scheme.getStatus().name() );
@@ -111,13 +111,13 @@ public class FundingMapperImpl implements FundingMapper {
         grantCallResponse.fundingDurationMonths( callSchemeFundingDurationMonths( call ) );
         grantCallResponse.schemeDocumentPath( callSchemeDocumentPath( call ) );
         grantCallResponse.schemeMaxAwardAmount( callSchemeMaxAwardAmount( call ) );
-        grantCallResponse.callTitle( call.getCallTitle() );
-        grantCallResponse.closeDate( call.getCloseDate() );
-        grantCallResponse.createdAt( call.getCreatedAt() );
-        grantCallResponse.expectedAwards( call.getExpectedAwards() );
         grantCallResponse.id( call.getId() );
+        grantCallResponse.callTitle( call.getCallTitle() );
         grantCallResponse.openDate( call.getOpenDate() );
+        grantCallResponse.closeDate( call.getCloseDate() );
+        grantCallResponse.expectedAwards( call.getExpectedAwards() );
         grantCallResponse.totalBudgetAllocated( call.getTotalBudgetAllocated() );
+        grantCallResponse.createdAt( call.getCreatedAt() );
         grantCallResponse.updatedAt( call.getUpdatedAt() );
 
         grantCallResponse.reviewMethod( call.getReviewMethod().name() );

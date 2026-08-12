@@ -127,11 +127,12 @@
           @if (phoneError(); as message) { <div class="d-flex align-items-center gap-1 text-danger small mt-1"><gt-icon name="alert-triangle" [size]="13" /> {{ message }}</div> }
         </div>
         <div class="col-md-6">
-          <label class="form-label" for="emailInput">Email</label>
-          <div class="input-group gt-input">
+          <label class="form-label" for="emailInput">Email <span class="text-danger">*</span></label>
+          <div class="input-group gt-input" [class.is-invalid]="invalid('email')">
             <span class="input-group-text"><gt-icon name="mail" [size]="16" /></span>
-            <input type="email" class="form-control py-2" formControlName="email" id="emailInput" placeholder="office@institution.edu" />
+            <input type="email" class="form-control py-2" formControlName="email" id="emailInput" [class.is-invalid]="invalid('email')" placeholder="office@institution.edu" />
           </div>
+          @if (invalid('email')) { <div class="d-flex align-items-center gap-1 text-danger small mt-1"><gt-icon name="alert-triangle" [size]="13" /> A valid email is required.</div> }
         </div>
       </div>
     </section>

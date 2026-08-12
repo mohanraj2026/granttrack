@@ -11,8 +11,8 @@ import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2026-08-08T18:32:52+0530",
-    comments = "version: 1.6.3, compiler: Eclipse JDT (IDE) 3.46.100.v20260624-0231, environment: Java 21.0.11 (Eclipse Adoptium)"
+    date = "2026-08-12T09:56:54+0530",
+    comments = "version: 1.6.3, compiler: javac, environment: Java 21.0.2 (Oracle Corporation)"
 )
 @Component
 public class ReviewMapperImpl implements ReviewMapper {
@@ -25,13 +25,13 @@ public class ReviewMapperImpl implements ReviewMapper {
 
         ReviewerAssignmentResponse.ReviewerAssignmentResponseBuilder reviewerAssignmentResponse = ReviewerAssignmentResponse.builder();
 
-        reviewerAssignmentResponse.applicationId( assignment.getApplicationId() );
-        reviewerAssignmentResponse.assignedDate( assignment.getAssignedDate() );
-        reviewerAssignmentResponse.createdAt( assignment.getCreatedAt() );
         reviewerAssignmentResponse.id( assignment.getId() );
-        reviewerAssignmentResponse.responseComment( assignment.getResponseComment() );
-        reviewerAssignmentResponse.reviewDeadline( assignment.getReviewDeadline() );
+        reviewerAssignmentResponse.applicationId( assignment.getApplicationId() );
         reviewerAssignmentResponse.reviewerId( assignment.getReviewerId() );
+        reviewerAssignmentResponse.assignedDate( assignment.getAssignedDate() );
+        reviewerAssignmentResponse.reviewDeadline( assignment.getReviewDeadline() );
+        reviewerAssignmentResponse.responseComment( assignment.getResponseComment() );
+        reviewerAssignmentResponse.createdAt( assignment.getCreatedAt() );
         reviewerAssignmentResponse.updatedAt( assignment.getUpdatedAt() );
 
         reviewerAssignmentResponse.conflictScreeningStatus( assignment.getConflictScreeningStatus().name() );
@@ -49,11 +49,11 @@ public class ReviewMapperImpl implements ReviewMapper {
         ReviewScoreResponse.ReviewScoreResponseBuilder reviewScoreResponse = ReviewScoreResponse.builder();
 
         reviewScoreResponse.assignmentId( scoreAssignmentId( score ) );
-        reviewScoreResponse.comments( score.getComments() );
-        reviewScoreResponse.createdAt( score.getCreatedAt() );
         reviewScoreResponse.id( score.getId() );
         reviewScoreResponse.score( score.getScore() );
+        reviewScoreResponse.comments( score.getComments() );
         reviewScoreResponse.submittedDate( score.getSubmittedDate() );
+        reviewScoreResponse.createdAt( score.getCreatedAt() );
         reviewScoreResponse.updatedAt( score.getUpdatedAt() );
 
         reviewScoreResponse.criterion( score.getCriterion().name() );
@@ -70,15 +70,15 @@ public class ReviewMapperImpl implements ReviewMapper {
 
         PanelDecisionResponse.PanelDecisionResponseBuilder panelDecisionResponse = PanelDecisionResponse.builder();
 
+        panelDecisionResponse.id( decision.getId() );
         panelDecisionResponse.applicationId( decision.getApplicationId() );
+        panelDecisionResponse.panelDate( decision.getPanelDate() );
+        panelDecisionResponse.consensusScore( decision.getConsensusScore() );
         panelDecisionResponse.awardedAmount( decision.getAwardedAmount() );
         panelDecisionResponse.conditionsAttached( decision.getConditionsAttached() );
-        panelDecisionResponse.consensusScore( decision.getConsensusScore() );
-        panelDecisionResponse.createdAt( decision.getCreatedAt() );
         panelDecisionResponse.decidedById( decision.getDecidedById() );
         panelDecisionResponse.financeOfficerId( decision.getFinanceOfficerId() );
-        panelDecisionResponse.id( decision.getId() );
-        panelDecisionResponse.panelDate( decision.getPanelDate() );
+        panelDecisionResponse.createdAt( decision.getCreatedAt() );
         panelDecisionResponse.updatedAt( decision.getUpdatedAt() );
 
         panelDecisionResponse.awardDecision( decision.getAwardDecision().name() );

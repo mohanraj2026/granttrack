@@ -17,6 +17,6 @@ public record InstitutionRequest(
         @NotBlank(message = "Mobile number is required")
         @Pattern(regexp = "\\d{10}", message = "Mobile number must be exactly 10 digits")
         String mobileNumber,
-        @Email @Size(max = 180) String email
+        @NotBlank @Email @Size(max = 180) String email
 ) {
 }
